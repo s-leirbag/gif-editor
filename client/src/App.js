@@ -68,7 +68,7 @@ export default class App extends React.Component {
     for (const file of e.target.files)
       data.append('images', file)
 
-    const response = await fetch('http://localhost:9000/testAPI', {
+    const response = await fetch('http://gif-editor-api.vercel.app/testAPI', {
       method: "POST",
       body: data,
     });
