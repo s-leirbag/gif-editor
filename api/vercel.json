@@ -1,0 +1,11 @@
+{
+    "headers": [
+      {
+        "source": "/testAPI/(.*)",
+        "headers": [
+          { "key": "Access-Control-Allow-Origin", "value": "https://gif-editor.vercel.app/" }
+        ]
+      }
+    ]
+  }
+  
