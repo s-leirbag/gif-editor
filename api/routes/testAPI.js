@@ -5,10 +5,6 @@ const Jimp = require('jimp');
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
-router.get("/", (req, res) => {
-  res.send("hello world");
-});
-
 router.post("/", upload.array("images", 50), async (req, res) => {
   let images = []
   for (const file of req.files) {
