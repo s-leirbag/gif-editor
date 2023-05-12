@@ -22,6 +22,9 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/asdf', (req, res) => {
+  res.end('asdf');
+});
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 app.use("/testAPI", testAPIRouter);
