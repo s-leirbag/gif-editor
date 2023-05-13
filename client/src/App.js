@@ -7,6 +7,8 @@ import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 // import Typography from '@mui/material/Typography';
+
+import AnchorIcon from '@mui/icons-material/Anchor';
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { cloneDeep } from 'lodash';
@@ -18,12 +20,17 @@ export default class App extends React.Component {
     this.state = {
       face: '',
       images: [],
-      filename: '',
       selectedImg: null,
+      faceAnchor: { x: 0, y: 0 },
+      faceSize: { width: 0, height: 0 },
+      faceScreenSize: { width: 0, height: 0 },
+      faceScreenPos: { top: 0, left: 0 },
+      gifSize: { width: 0, height: 0 },
+      gifAnchors: [],
     };
   }
 
-  async handleFaceUpload(e) {
+  handleFaceUpload(e) {
     e.preventDefault();
     if (!e.target.files)
       return;
@@ -31,13 +38,18 @@ export default class App extends React.Component {
     const file = e.target.files[0];
     const fileReader = new FileReader();
     fileReader.readAsDataURL(file);
-    let self = this;
+    const self = this;
     fileReader.addEventListener("load", function () {
-      self.setState({ face: this.result })
+      self.setState({ face: this.result });
+      // Get gif dimensions
+      self.getImgSize(this.result, (size) => self.setState({
+        faceSize: size,
+        faceAnchor: { x: size.width / 2, y: size.height / 2 },
+      }));
     });
   }
 
-  async handleImagesUpload(e) {
+  handleImagesUpload(e) {
     e.preventDefault();
     const files = e.target.files;
     if (!files)
@@ -45,7 +57,7 @@ export default class App extends React.Component {
 
     function readFile(file) {
       return new Promise(function (resolve, reject) {
-        let fr = new FileReader();
+        const fr = new FileReader();
         fr.onload = function(){ resolve(fr.result) };
         fr.onerror = function(){ reject(fr) };
         fr.readAsDataURL(file);
@@ -54,19 +66,23 @@ export default class App extends React.Component {
 
     // Store promises in array
     let readers = [];
-    for(const file of files){
+    for(const file of files)
       readers.push(readFile(file));
-    }
     
     // Trigger Promises
     Promise.all(readers).then((urls) => {
+      // Add uploaded images
       let newImages = cloneDeep(this.state.images);
       for (const url of urls)
         newImages.push(url);
       this.setState({ images: newImages })
-      if (this.state.selectedImg == null) {
+
+      // Get gif dimensions
+      this.getImgSize(urls[0], (size) => this.setState({ gifSize: size }));
+
+      // Select first image if first upload
+      if (this.state.selectedImg == null)
         this.setState({ selectedImg: 0 });
-      }
     });
     
     // let data = new FormData()
@@ -85,6 +101,16 @@ export default class App extends React.Component {
     // for (const image of images)
     //   newImages.push(image);
     // this.setState({ images: newImages })
+  }
+
+  getImgSize(src, callback) {
+    const image = new Image();
+    image.onload = function() {
+      const height = image.height;
+      const width = image.width;
+      callback({ width, height });
+    };
+    image.src = src; // this must be done AFTER setting onload
   }
 
   handleClickImage(i) {
@@ -112,12 +138,30 @@ export default class App extends React.Component {
   }
 
   render() {
-    const face = this.state.face ? <img
-      src={this.state.face}
-      width={'100%'}
-      alt={'face'}
-      loading="lazy"
-    /> : '';
+    let face = '';
+    if (this.state.face) {
+      face = [<img
+        src={this.state.face}
+        width={'100%'}
+        alt={'face'}
+        loading="lazy"
+        key='face'
+        onLoad={({target:img}) => {
+          const height = img.clientHeight;
+          const width = img.clientWidth;
+          const top = img.getBoundingClientRect().top
+          const left = img.getBoundingClientRect().left;
+          this.setState({ faceScreenSize: { width, height }, faceScreenPos: { top, left } });
+        }}
+      />];
+      const faceAnchor = this.state.faceAnchor;
+      const faceSize = this.state.faceSize;
+      const faceScreenSize = this.state.faceScreenSize;
+      const faceScreenPos = this.state.faceScreenPos;
+      const anchorX = faceScreenPos.left + faceAnchor.x / faceSize.width * faceScreenSize.width;
+      const anchorY = faceScreenPos.top + faceAnchor.y / faceSize.height * faceScreenSize.height;
+      face.push(<AnchorIcon sx={{ position: 'absolute', top: anchorY, left: anchorX }} key='anchor'/>);
+    }
     const selectedImg = this.state.selectedImg != null ? <img
       src={this.state.images[this.state.selectedImg]}
       width={'100%'}
@@ -127,7 +171,7 @@ export default class App extends React.Component {
     return (
       <div className="App">
         <CssBaseline />
-        <Grid container columnSpacing={2} sx={{ p: 2, width: '100vw', height: '100vh' }}>
+        <Grid container columnSpacing={2} sx={{ p: 2, height: '100vh' }}>
           <Grid item xs={5}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               <Box>
