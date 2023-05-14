@@ -47,10 +47,17 @@ class AnchoredImage extends React.Component {
         onLoad={({target:img}) => {
           const height = img.clientHeight;
           const width = img.clientWidth;
-          this.setState({ screenSize: { width, height } });
+          const x = img.getBoundingClientRect().left;
+          const y = img.getBoundingClientRect().top;
+          this.setState({
+            screenSize: { width, height },
+            screenPos: { x, y },
+          });
         }}
+        style={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}
       />];
       const screenSize = this.state.screenSize;
+      const screenPos = this.state.screenPos;
       if (screenSize != null) {
         anchoredImage.push(
           <Draggable
@@ -60,7 +67,7 @@ class AnchoredImage extends React.Component {
             bounds={{left: 0, top: 0, right: screenSize.width, bottom: screenSize.height}}
             onStop={(e, data) => this.handleDragStop(e, data)}
           >
-            <AnchorIcon className='handle' key='anchor' sx={{ position: 'absolute', top: 0, left: 0 }}/>
+            <AnchorIcon className='handle' key='anchor' sx={{ position: 'absolute', top: screenPos.y, left: screenPos.x }}/>
           </Draggable>
         );
       }
@@ -224,7 +231,6 @@ export default class App extends React.Component {
   }
 
   render() {
-    console.log(this.state.faceSize);
     const face = this.renderFace();
     const selectedImg = this.renderSelectedImg();
     return (
@@ -247,15 +253,12 @@ export default class App extends React.Component {
                   component="label"
                   variant="outlined"
                   startIcon={<UploadFileIcon />}
-                  sx={{ marginRight: "1rem" }}
                 >
                   Upload Images
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
                 </Button>
               </Box>
-              <Box sx={{ position: 'relative', height: '400px', width: '400px' }}>
-                {face}
-              </Box>
+              {face}
             </Paper>
           </Grid>
           <Grid item xs={5} sx={{ height: '100%' }}>
