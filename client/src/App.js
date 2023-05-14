@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import Draggable from 'react-draggable';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -23,8 +24,7 @@ export default class App extends React.Component {
       selectedImg: null,
       faceAnchor: { x: 0, y: 0 },
       faceSize: { width: 0, height: 0 },
-      faceScreenSize: { width: 0, height: 0 },
-      faceScreenPos: { top: 0, left: 0 },
+      faceScreenSize: null,
       gifSize: { width: 0, height: 0 },
       gifAnchors: [],
     };
@@ -137,6 +137,14 @@ export default class App extends React.Component {
     );
   }
 
+  handleDragStop(e, data) {
+    const faceScreenSize = this.state.faceScreenSize;
+    const faceSize = this.state.faceSize;
+    const x = data.x * faceSize.width / faceScreenSize.width;
+    const y = data.y * faceSize.height / faceScreenSize.height;
+    this.setState({ faceAnchor: { x, y } });
+  }
+
   render() {
     let face = '';
     if (this.state.face) {
@@ -149,18 +157,23 @@ export default class App extends React.Component {
         onLoad={({target:img}) => {
           const height = img.clientHeight;
           const width = img.clientWidth;
-          const top = img.getBoundingClientRect().top
-          const left = img.getBoundingClientRect().left;
-          this.setState({ faceScreenSize: { width, height }, faceScreenPos: { top, left } });
+          this.setState({ faceScreenSize: { width, height } });
         }}
       />];
-      const faceAnchor = this.state.faceAnchor;
-      const faceSize = this.state.faceSize;
       const faceScreenSize = this.state.faceScreenSize;
-      const faceScreenPos = this.state.faceScreenPos;
-      const anchorX = faceScreenPos.left + faceAnchor.x / faceSize.width * faceScreenSize.width;
-      const anchorY = faceScreenPos.top + faceAnchor.y / faceSize.height * faceScreenSize.height;
-      face.push(<AnchorIcon sx={{ position: 'absolute', top: anchorY, left: anchorX }} key='anchor'/>);
+      if (faceScreenSize != null) {
+        face.push(
+          <Draggable
+            handle=".handle"
+            key='anchor'
+            defaultPosition={{x: faceScreenSize.width / 2, y: faceScreenSize.height / 2}}
+            bounds={{left: 0, top: 0, right: faceScreenSize.width, bottom: faceScreenSize.height}}
+            onStop={(e, data) => this.handleDragStop(e, data)}
+          >
+            <AnchorIcon className='handle' key='anchor' sx={{ position: 'absolute', top: 0, left: 0 }}/>
+          </Draggable>
+        );
+      }
     }
     const selectedImg = this.state.selectedImg != null ? <img
       src={this.state.images[this.state.selectedImg]}
@@ -194,7 +207,9 @@ export default class App extends React.Component {
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
                 </Button>
               </Box>
-              {face}
+              <Box sx={{ position: 'relative', height: '400px', width: '400px' }}>
+                {face}
+              </Box>
             </Paper>
           </Grid>
           <Grid item xs={5} sx={{ height: '100%' }}>
