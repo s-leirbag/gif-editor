@@ -19,27 +19,41 @@ class AnchoredImage extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      src: props.src,
-      size: props.size,
       screenSize: null,
+      screenPos: null,
+      anchor: props.anchor,
+    };
+  }
+
+  actualToScreen({x, y}) {
+    const screenSize = this.state.screenSize;
+    return {
+      x: x * screenSize.width / this.props.size.width,
+      y: y * screenSize.height / this.props.size.height,
+    };
+  }
+
+  screenToActual({x, y}) {
+    const screenSize = this.state.screenSize;
+    return {
+      x: x * this.props.size.width / screenSize.width,
+      y: y * this.props.size.height / screenSize.height,
     };
   }
 
   handleDragStop(e, data) {
-    const screenSize = this.state.screenSize;
-    const size = this.state.size;
-    const x = data.x * size.width / screenSize.width;
-    const y = data.y * size.height / screenSize.height;
-    this.props.onAnchorUpdate({ x, y });
+    const newAnchor = this.screenToActual(data);
+    this.props.onAnchorChange(newAnchor);
+    this.setState({anchor: newAnchor});
   }
 
   render() {
-    if (!this.state.src) {
+    if (!this.props.src) {
       return '';
     }
     else {
       const anchoredImage = [<img
-        src={this.state.src}
+        src={this.props.src}
         width={'100%'}
         alt={this.props.imageName}
         loading="lazy"
@@ -63,7 +77,7 @@ class AnchoredImage extends React.Component {
           <Draggable
             handle=".handle"
             key='anchor'
-            defaultPosition={{x: screenSize.width / 2, y: screenSize.height / 2}}
+            position={this.actualToScreen(this.state.anchor)}
             bounds={{left: 0, top: 0, right: screenSize.width, bottom: screenSize.height}}
             onStop={(e, data) => this.handleDragStop(e, data)}
           >
@@ -139,7 +153,10 @@ export default class App extends React.Component {
       this.setState({ images: newImages })
 
       // Get gif dimensions
-      this.getImgSize(urls[0], (size) => this.setState({ gifSize: size }));
+      this.getImgSize(urls[0], (size) => this.setState({
+        gifSize: size,
+        gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
+      }));
 
       // Select first image if first upload
       if (this.state.selectedImg == null)
@@ -207,7 +224,8 @@ export default class App extends React.Component {
         imageName='face'
         src={this.state.face}
         size={this.state.faceSize}
-        onAnchorUpdate={(anchor) => this.setState({ faceAnchor: anchor })}
+        anchor={this.state.faceAnchor}
+        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor })}
       />;
     }
   }
@@ -217,15 +235,18 @@ export default class App extends React.Component {
       return '';
     }
     else {
+      const selectedImg = this.state.selectedImg;
       return <AnchoredImage
         imageName='selected'
-        src={this.state.images[this.state.selectedImg]}
+        src={this.state.images[selectedImg]}
         size={this.state.gifSize}
-        onAnchorUpdate={(anchor) => function() {
+        anchor={this.state.gifAnchors[selectedImg]}
+        onAnchorChange={(anchor) => {
           let newGifAnchors = cloneDeep(this.state.gifAnchors);
-          newGifAnchors[this.state.selectedImg] = anchor;
+          newGifAnchors[selectedImg] = anchor;
           this.setState({ gifAnchors: newGifAnchors })
         }}
+        key={selectedImg} // jank
       />;
     }
   }
