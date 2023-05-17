@@ -95,7 +95,8 @@ export default class App extends React.Component {
     super(props);
     this.state = {
       face: '',
-      images: [],
+      imgs: [],
+      imgsEdited: [],
       selectedImg: null,
       faceAnchor: null,
       faceSize: null,
@@ -120,11 +121,11 @@ export default class App extends React.Component {
       self.getImgSize(this.result, (size) => self.setState({
         faceSize: size,
         faceAnchor: { x: size.width / 2, y: size.height / 2 },
-      }));
+      }, () => self.fetchEditedImg(0)));
     });
   }
 
-  handleImagesUpload(e) {
+  async handleImagesUpload(e) {
     e.preventDefault();
     const files = e.target.files;
     if (!files)
@@ -147,24 +148,26 @@ export default class App extends React.Component {
     // Trigger Promises
     Promise.all(readers).then((urls) => {
       // Add uploaded images
-      let newImages = cloneDeep(this.state.images);
+      let newImgs = cloneDeep(this.state.imgs);
       for (const url of urls)
-        newImages.push(url);
-      this.setState({ images: newImages })
+        newImgs.push(url);
+      this.setState({ imgs: newImgs, imgsEdited: newImgs })
 
       // Get gif dimensions
       this.getImgSize(urls[0], (size) => this.setState({
         gifSize: size,
         gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
-      }));
+      }, () => this.fetchEditedImg(0)));
 
       // Select first image if first upload
       if (this.state.selectedImg == null)
         this.setState({ selectedImg: 0 });
     });
-    
+
+
+
     // let data = new FormData()
-    // for (const file of e.target.files)
+    // for (const file of files)
     //   data.append('images', file)
 
     // const response = await fetch('/testAPI', {
@@ -174,11 +177,38 @@ export default class App extends React.Component {
     // if (!response.ok)
     //   return;
 
-    // let newImages = cloneDeep(this.state.images);
-    // const images = await response.json();
-    // for (const image of images)
-    //   newImages.push(image);
-    // this.setState({ images: newImages })
+    // let newImgs = cloneDeep(this.state.imgs);
+    // const imgs = await response.json();
+    // for (const img of imgs)
+    //   newImgs.push(img);
+    // this.setState({ imgs: newImgs, imgsEdited: newImgs })
+    // this.setState({ selectedImg: 0 });
+    // this.getImgSize(imgs[0], (size) => this.setState({
+    //   gifSize: size,
+    //   gifAnchors: Array(imgs.length).fill({ x: size.width / 2, y: size.height / 2 }),
+    // }, () => this.fetchEditedImg(0)));
+  }
+
+  async fetchEditedImg(i) {
+    if (this.state.faceSize == null || this.state.gifSize == null)
+      return;
+    
+    let data = new FormData();
+    data.append('face', this.state.face);
+    data.append('image', this.state.imgs[i]);
+    data.append('faceAnchor', JSON.stringify(this.state.faceAnchor));
+    data.append('imageAnchor', JSON.stringify(this.state.gifAnchors[i]));
+
+    const response = await fetch('/testAPI', {
+      method: "POST",
+      body: data,
+    });
+    if (!response.ok)
+      return;
+
+    let newImgsEdited = cloneDeep(this.state.imgsEdited);
+    newImgsEdited[i] = await response.text();
+    this.setState({ imgsEdited: newImgsEdited });
   }
 
   getImgSize(src, callback) {
@@ -198,15 +228,14 @@ export default class App extends React.Component {
   renderImg(i) {
     // Highlight image if selected
     let bgCol;
-    if (this.state.selectedImg === i) {
+    if (this.state.selectedImg === i)
       bgCol = 'yellow';
-    }
     
     return (
       <Box
         component='img'
         key={i}
-        src={this.state.images[i]}
+        src={this.state.imgsEdited[i]}
         alt={'image ' + i}
         loading='lazy'
         sx={{ width: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
@@ -225,7 +254,10 @@ export default class App extends React.Component {
         src={this.state.face}
         size={this.state.faceSize}
         anchor={this.state.faceAnchor}
-        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor })}
+        onAnchorChange={(anchor) => {
+          this.setState({ faceAnchor: anchor });
+          this.fetchEditedImg(this.state.selectedImg);
+        }}
       />;
     }
   }
@@ -238,7 +270,7 @@ export default class App extends React.Component {
       const selectedImg = this.state.selectedImg;
       return <AnchoredImage
         imageName='selected'
-        src={this.state.images[selectedImg]}
+        src={this.state.imgsEdited[selectedImg]}
         size={this.state.gifSize}
         anchor={this.state.gifAnchors[selectedImg]}
         onAnchorChange={(anchor) => {
@@ -290,7 +322,7 @@ export default class App extends React.Component {
           <Grid item xs={2} sx={{ height: '100%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               <Box sx={{ height: '100%', display: 'block', overflow: 'auto' }}>
-                {this.state.images.map((image, index) => (
+                {this.state.imgsEdited.map((image, index) => (
                   this.renderImg(index)
                 ))}
               </Box>
