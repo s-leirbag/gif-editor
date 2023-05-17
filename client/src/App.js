@@ -98,10 +98,10 @@ export default class App extends React.Component {
       imgs: [],
       imgsEdited: [],
       selectedImg: null,
-      faceAnchor: null,
       faceSize: null,
-      faceScreenSize: null,
+      faceScaleSize: null,
       gifSize: null,
+      faceAnchor: null,
       gifAnchors: [],
     };
   }
@@ -190,15 +190,34 @@ export default class App extends React.Component {
   }
 
   async fetchEditedImg(i) {
-    if (this.state.faceSize == null || this.state.gifSize == null)
+    const faceSize = this.state.faceSize;
+    const gifSize = this.state.gifSize;
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors'))
       return;
+    
+    let faceScaleSize = this.state.faceScaleSize;
+    if (this.state.faceScaleSize == null) {
+      faceScaleSize = {};
+      if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
+        faceScaleSize.width = gifSize.width;
+        faceScaleSize.height = faceSize.height * (gifSize.width / faceSize.width);
+      }
+      else {
+        faceScaleSize.height = gifSize.height;
+        faceScaleSize.width = faceSize.width * (gifSize.height / faceSize.height);
+      }
+      faceScaleSize = { width: faceScaleSize.width / 2, height: faceScaleSize.height / 2};
+      this.setState({ faceScaleSize });
+    }
     
     let data = new FormData();
     data.append('face', this.state.face);
     data.append('image', this.state.imgs[i]);
+    data.append('faceSize', JSON.stringify(faceSize));
+    data.append('gifSize', JSON.stringify(gifSize));
+    data.append('faceScaleSize', JSON.stringify(faceScaleSize));
     data.append('faceAnchor', JSON.stringify(this.state.faceAnchor));
     data.append('imageAnchor', JSON.stringify(this.state.gifAnchors[i]));
-
     const response = await fetch('/testAPI', {
       method: "POST",
       body: data,
@@ -219,6 +238,14 @@ export default class App extends React.Component {
       callback({ width, height });
     };
     image.src = src; // this must be done AFTER setting onload
+  }
+
+  isAnyVarsNull() {
+    for (let i = 0; i < arguments.length; i++) {
+      if (this.state[arguments[i]] == null)
+        return true;
+    }
+    return false;
   }
 
   handleClickImage(i) {
@@ -245,7 +272,7 @@ export default class App extends React.Component {
   }
 
   renderFace() {
-    if (this.state.faceSize == null) {
+    if (this.isAnyVarsNull('faceSize', 'faceAnchor')) {
       return '';
     }
     else {
@@ -254,16 +281,13 @@ export default class App extends React.Component {
         src={this.state.face}
         size={this.state.faceSize}
         anchor={this.state.faceAnchor}
-        onAnchorChange={(anchor) => {
-          this.setState({ faceAnchor: anchor });
-          this.fetchEditedImg(this.state.selectedImg);
-        }}
+        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, () => this.fetchEditedImg(this.state.selectedImg))}
       />;
     }
   }
 
   renderSelectedImg() {
-    if (this.state.gifSize == null) {
+    if (this.isAnyVarsNull('gifSize', 'gifAnchors')) {
       return '';
     }
     else {
@@ -276,7 +300,7 @@ export default class App extends React.Component {
         onAnchorChange={(anchor) => {
           let newGifAnchors = cloneDeep(this.state.gifAnchors);
           newGifAnchors[selectedImg] = anchor;
-          this.setState({ gifAnchors: newGifAnchors })
+          this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg(this.state.selectedImg));
         }}
         key={selectedImg} // jank
       />;
