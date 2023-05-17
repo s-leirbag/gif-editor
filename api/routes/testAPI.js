@@ -30,48 +30,22 @@ router.post("/", cpUpload, async (req, res) => {
   // console.log('faceScaleSize ', faceScaleSize);
   // console.log('faceAnchor ', faceAnchor)
 
-  // const ratio = faceScaleSize.width / faceSize.width;
-  // faceAnchor = objectValuesToIntegers({x: faceAnchor.x * ratio, y: faceAnchor.y * ratio});
+  const ratio = faceScaleSize.width / faceSize.width;
+  faceAnchor = objectValuesToIntegers({x: faceAnchor.x * ratio, y: faceAnchor.y * ratio});
   // console.log('faceAnchor scaled ', faceAnchor)
 
   // console.log('imgAnchor ', imgAnchor);
 
   const { data, info } = await sharp(imgBuffer).toBuffer({ resolveWithObject: true });
 
-  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
-  const extractLeft = faceAnchor.x > imgAnchor.x ? faceAnchor.x - imgAnchor.x : 0;
-  const extractTop = faceAnchor.y > imgAnchor.y ? faceAnchor.y - imgAnchor.y : 0;
-  const extractWidth = faceScaleSize.width - extractLeft;
-  const extractHeight = faceScaleSize.height - extractTop;
-  const extract = {
-    left: extractLeft,
-    top: extractTop,
-    width: extractWidth > gifSize.width ? gifSize.width : extractWidth,
-    height: extractHeight > gifSize.height ? gifSize.height : extractHeight,
-    background: transparent,
-  };
-  const extend = {
-    left: faceAnchor.x < imgAnchor.x ? imgAnchor.x - faceAnchor.x : 0,
-    top: faceAnchor.y < imgAnchor.y ? imgAnchor.y - faceAnchor.y : 0,
-    right: faceScaleSize.width - faceAnchor.x < gifSize.width - imgAnchor.x ? (gifSize.width - imgAnchor.x) - (faceScaleSize.width - faceAnchor.x) : 0,
-    down: faceScaleSize.height - faceAnchor.y < gifSize.height - imgAnchor.y ? (gifSize.height - imgAnchor.y) - (faceScaleSize.height - faceAnchor.y) : 0,
-    background: transparent,
-  };
-  // console.log('extend ', extend);
-  // console.log('extract ', extract);
-  // let face = await sharp(faceBuffer)
-  //   .resize(faceScaleSize.width, faceScaleSize.height)
-  //   .extract(extract)
-  //   .extend(extend)
-  //   .toBuffer();
-  // const metadata = await sharp(face).metadata();
-  // console.log(metadata.width, metadata.height);
-
-  // face = await sharp(face).composite([{ input: data }]).toBuffer();
-
-  let face = await translateImg(faceBuffer, faceAnchor.x, faceAnchor.y);
-
-  const base64 = 'data:image/jpeg;base64,' + face.toString('base64');
+  let face = await sharp(faceBuffer)
+    .resize(faceScaleSize.width, faceScaleSize.height)
+    .toBuffer();
+  face = await translate(face, imgAnchor.x - faceAnchor.x, imgAnchor.y - faceAnchor.y);
+  face = await resizeCanvas(face, gifSize.width, gifSize.height);
+  face = await sharp(face).composite([{ input: data }]).toBuffer();
+  
+  const base64 = 'data:image/png;base64,' + face.toString('base64');
   res.send(base64);
 });
 
@@ -96,28 +70,52 @@ objectValuesToIntegers = (obj) => {
   return obj;
 }
 
-translateImg = async (img, x, y) => {
+getSize = async (img) => {
   const metadata = await sharp(img).metadata();
   const width = metadata.width;
   const height = metadata.height;
+  return { width, height };
+}
+
+translate = async (img, x, y) => {
+  const { width, height } = await getSize(img);
   const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   const extract = {
     left: x < 0 ? -x : 0,
     top: y < 0 ? -y : 0,
-    width: width - Math.abs(x),
-    height: height - Math.abs(y),
+    width: x < 0 ? width + x : width,
+    height: y < 0 ? height + y : height,
     background: transparent,
   };
   const extend = {
     left: x > 0 ? x : 0,
     top: y > 0 ? y : 0,
     right: x < 0 ? -x : 0,
-    down: y < 0 ? -y : 0,
+    bottom: y < 0 ? -y : 0,
     background: transparent,
   }
-  // console.log(width, height, x, y);
-  // console.log('extract ', extract);
-  // console.log('extend ', extend);
+  return await sharp(img).extract(extract).extend(extend).toBuffer();
+}
+
+resizeCanvas = async (img, newWidth, newHeight) => {
+  const metadata = await sharp(img).metadata();
+  const width = metadata.width;
+  const height = metadata.height;
+  const widthLarger = newWidth > width;
+  const heightLarger = newHeight > height;
+  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+  const extract = {
+    left: 0,
+    top: 0,
+    width: widthLarger ? width : newWidth,
+    height: heightLarger ? height : newHeight,
+    background: transparent,
+  }
+  const extend = {
+    right: widthLarger ? newWidth - width : 0,
+    bottom: heightLarger ? newHeight - height : 0,
+    background: transparent,
+  }
   return await sharp(img).extract(extract).extend(extend).toBuffer();
 }
 
