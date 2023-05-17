@@ -7,7 +7,9 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
-// import Typography from '@mui/material/Typography';
+import Slider from '@mui/material/Slider';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 import AnchorIcon from '@mui/icons-material/Anchor';
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -103,6 +105,7 @@ export default class App extends React.Component {
       gifSize: null,
       faceAnchor: null,
       gifAnchors: [],
+      faceScale: 50,
     };
   }
 
@@ -195,20 +198,17 @@ export default class App extends React.Component {
     if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors'))
       return;
     
-    let faceScaleSize = this.state.faceScaleSize;
-    if (this.state.faceScaleSize == null) {
-      faceScaleSize = {};
-      if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
-        faceScaleSize.width = gifSize.width;
-        faceScaleSize.height = faceSize.height * (gifSize.width / faceSize.width);
-      }
-      else {
-        faceScaleSize.height = gifSize.height;
-        faceScaleSize.width = faceSize.width * (gifSize.height / faceSize.height);
-      }
-      faceScaleSize = { width: faceScaleSize.width / 2, height: faceScaleSize.height / 2};
-      this.setState({ faceScaleSize });
+    const scale = this.state.faceScale / 100 * 2;
+    let faceScaleSize = {};
+    if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
+      faceScaleSize.width = gifSize.width * scale;
+      faceScaleSize.height = faceSize.height * (gifSize.width / faceSize.width) * scale;
     }
+    else {
+      faceScaleSize.height = gifSize.height * scale;
+      faceScaleSize.width = faceSize.width * (gifSize.height / faceSize.height) * scale;
+    }
+    this.setState({ faceScaleSize });
     
     let data = new FormData();
     data.append('face', this.state.face);
@@ -246,6 +246,15 @@ export default class App extends React.Component {
         return true;
     }
     return false;
+  }
+  
+  handleFaceScaleChange(e, v) {
+    this.setState({ faceScale: v });
+  }
+
+  handleFaceScaleChangeCommitted(e, v) {
+    this.setState({ faceScale: v });
+    this.fetchEditedImg(this.state.selectedImg);
   }
 
   handleClickImage(i) {
@@ -336,6 +345,23 @@ export default class App extends React.Component {
                 </Button>
               </Box>
               {face}
+              <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+                <Typography variant='h6' component='h6'>Size</Typography>
+                <Slider
+                  aria-label='Face size'
+                  defaultValue={50}
+                  value={this.state.faceScale}
+                  valueLabelFormat={(value) => value / 100 * 2}
+                  valueLabelDisplay='auto'
+                  marks={[
+                    { value: 0, label: '0' },
+                    { value: 50, label: '1' },
+                    { value: 100, label: '2' },
+                  ]}
+                  onChange={(e, v) => this.handleFaceScaleChange(e, v)}
+                  onChangeCommitted={(e, v) => this.handleFaceScaleChangeCommitted(e, v)}
+                />
+              </Stack>
             </Paper>
           </Grid>
           <Grid item xs={5} sx={{ height: '100%' }}>

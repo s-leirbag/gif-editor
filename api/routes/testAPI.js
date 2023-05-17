@@ -19,31 +19,18 @@ router.post("/", cpUpload, async (req, res) => {
   const imgBase64 = req.body.image.split(',')[1];
   const faceSize = JSON.parse(req.body.faceSize);
   const gifSize = JSON.parse(req.body.gifSize);
-  const faceScaleSize = JSON.parse(req.body.faceScaleSize);
-  let faceAnchor = objectValuesToIntegers(JSON.parse(req.body.faceAnchor));
-  const imgAnchor = objectValuesToIntegers(JSON.parse(req.body.imageAnchor));
-  const faceBuffer = Buffer.from(faceBase64, 'base64');
-  const imgBuffer = Buffer.from(imgBase64, 'base64');
-
-  // console.log('faceSize ', faceSize);
-  // console.log('gifSize ', gifSize);
-  // console.log('faceScaleSize ', faceScaleSize);
-  // console.log('faceAnchor ', faceAnchor)
-
+  const faceScaleSize = objValsToInts(JSON.parse(req.body.faceScaleSize));
   const ratio = faceScaleSize.width / faceSize.width;
-  faceAnchor = objectValuesToIntegers({x: faceAnchor.x * ratio, y: faceAnchor.y * ratio});
-  // console.log('faceAnchor scaled ', faceAnchor)
+  let faceAnchor = JSON.parse(req.body.faceAnchor);
+  faceAnchor = objValsToInts({x: faceAnchor.x * ratio, y: faceAnchor.y * ratio});
+  const imgAnchor = objValsToInts(JSON.parse(req.body.imageAnchor));
+  let face = Buffer.from(faceBase64, 'base64');
+  const gifImg = Buffer.from(imgBase64, 'base64');
 
-  // console.log('imgAnchor ', imgAnchor);
-
-  const { data, info } = await sharp(imgBuffer).toBuffer({ resolveWithObject: true });
-
-  let face = await sharp(faceBuffer)
-    .resize(faceScaleSize.width, faceScaleSize.height)
-    .toBuffer();
+  face = await sharp(face).resize(faceScaleSize.width, faceScaleSize.height).toBuffer();
   face = await translate(face, imgAnchor.x - faceAnchor.x, imgAnchor.y - faceAnchor.y);
   face = await resizeCanvas(face, gifSize.width, gifSize.height);
-  face = await sharp(face).composite([{ input: data }]).toBuffer();
+  face = await sharp(face).composite([{ input: gifImg }]).toBuffer();
   
   const base64 = 'data:image/png;base64,' + face.toString('base64');
   res.send(base64);
@@ -64,7 +51,7 @@ router.post("/", cpUpload, async (req, res) => {
 //   res.send(images)
 // });
 
-objectValuesToIntegers = (obj) => {
+objValsToInts = (obj) => {
   for (const key in obj)
     obj[key] = parseInt(obj[key]);
   return obj;
