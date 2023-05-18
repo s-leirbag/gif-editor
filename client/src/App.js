@@ -140,6 +140,23 @@ export default class App extends React.Component {
     };
   }
 
+  componentDidMount() {
+    window.addEventListener("keydown", this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener("keydown", this.handleKeyDown);
+  }
+
+  handleKeyDown = (event) => {
+    const selectedImg = this.state.selectedImg;
+    const imgsLength = this.state.imgs.length;
+    if (event.key === 'ArrowUp')
+      this.setState({ selectedImg: selectedImg === 0 ? imgsLength - 1 : selectedImg - 1 });
+    if (event.key === 'ArrowDown')
+      this.setState({ selectedImg: (selectedImg + 1) % imgsLength });
+  }
+
   handleFaceUpload(e) {
     e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
