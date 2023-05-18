@@ -111,11 +111,28 @@ class AnchoredImage extends React.Component {
         );
       }
       return (
-        <Box
-          sx={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}
-        >
-          {anchoredImage}
-        </Box>
+        <>
+          <Box sx={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}>
+            {anchoredImage}
+          </Box>
+          <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+            <Typography variant='h6' component='h6'>Size</Typography>
+            <Slider
+              aria-label='Face size'
+              defaultValue={50}
+              value={this.props.faceScale}
+              valueLabelFormat={(value) => value / 100 * 2}
+              valueLabelDisplay='auto'
+              marks={[
+                { value: 0, label: '0' },
+                { value: 50, label: '1' },
+                { value: 100, label: '2' },
+              ]}
+              onChange={this.props.onScaleChange}
+              onChangeCommitted={this.props.onScaleChangeCommitted}
+            />
+          </Stack>
+        </>
       );
     }
   }
@@ -137,6 +154,7 @@ export default class App extends React.Component {
       faceAnchor: null,
       gifAnchors: [],
       faceScale: 50,
+      gifFaceScales: [],
     };
   }
 
@@ -178,6 +196,7 @@ export default class App extends React.Component {
       this.getImgSize(urls[0], (size) => this.setState({
         gifSize: size,
         gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
+        gifFaceScales: Array(urls.length).fill(50),
       }, () => this.fetchEditedImg()));
 
       // Select first image if first upload
@@ -217,14 +236,14 @@ export default class App extends React.Component {
   }
 
   async fetchEditedImg() {
-    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors'))
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors', 'gifFaceScales'))
       return;
     
     const imgIndex = this.state.selectedImg;
     const faceSize = this.state.faceSize;
     const gifSize = this.state.gifSize;
 
-    const scale = this.state.faceScale / 100 * 2;
+    const scale = this.state.faceScale / 100 * 2 * this.state.gifFaceScales[imgIndex] / 100 * 2;
     let faceScaleSize = {};
     if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
       faceScaleSize.width = gifSize.width * scale;
@@ -282,6 +301,19 @@ export default class App extends React.Component {
     this.setState({ faceScale: v });
     this.fetchEditedImg();
   }
+  
+  handleSelImgScaleChange(e, v) {
+    const newScales = cloneDeep(this.state.gifFaceScales);
+    newScales[this.state.selectedImg] = v;
+    this.setState({ gifFaceScales: newScales });
+  }
+
+  handleSelImgScaleChangeCommitted(e, v) {
+    const newScales = cloneDeep(this.state.gifFaceScales);
+    newScales[this.state.selectedImg] = v;
+    this.setState({ gifFaceScales: newScales });
+    this.fetchEditedImg();
+  }
 
   handleIsGuideOnChange(e, c) {
     this.setState({ isGuideOn: c });
@@ -321,6 +353,8 @@ export default class App extends React.Component {
         size={this.state.faceSize}
         anchor={this.state.faceAnchor}
         onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, () => this.fetchEditedImg())}
+        onScaleChange={this.handleFaceScaleChange.bind(this)}
+        onScaleChangeCommitted={this.handleFaceScaleChangeCommitted.bind(this)}
       />;
     }
   }
@@ -342,7 +376,9 @@ export default class App extends React.Component {
           newGifAnchors[selectedImg] = anchor;
           this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg());
         }}
-        key={selectedImg} // jank
+        onScaleChange={this.handleSelImgScaleChange.bind(this)}
+        onScaleChangeCommitted={this.handleSelImgScaleChangeCommitted.bind(this)}
+        key={selectedImg} // jank?
       />;
     }
   }
@@ -384,23 +420,6 @@ export default class App extends React.Component {
                 </Button>
               </Box>
               {face}
-              <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-                <Typography variant='h6' component='h6'>Size</Typography>
-                <Slider
-                  aria-label='Face size'
-                  defaultValue={50}
-                  value={this.state.faceScale}
-                  valueLabelFormat={(value) => value / 100 * 2}
-                  valueLabelDisplay='auto'
-                  marks={[
-                    { value: 0, label: '0' },
-                    { value: 50, label: '1' },
-                    { value: 100, label: '2' },
-                  ]}
-                  onChange={(e, v) => this.handleFaceScaleChange(e, v)}
-                  onChangeCommitted={(e, v) => this.handleFaceScaleChangeCommitted(e, v)}
-                />
-              </Stack>
             </Paper>
           </Grid>
           <Grid item xs={5} sx={{ height: '100%' }}>
