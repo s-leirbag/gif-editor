@@ -18,7 +18,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { cloneDeep } from 'lodash';
 // import { clone, sample, isEmpty } from 'lodash';
 
-class AnchoredImage extends React.Component {
+class ImageEditor extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -61,7 +61,7 @@ class AnchoredImage extends React.Component {
       return '';
     }
     else {
-      const anchoredImage = [<img
+      const imageSection = [<img
         src={this.props.src}
         width={'100%'}
         alt={this.props.imageName}
@@ -84,7 +84,7 @@ class AnchoredImage extends React.Component {
       const iconSize = this.state.iconSize;
       if (screenSize != null && screenSize != null) {
         if (this.state.isGuideOn && this.props.guide) {
-          anchoredImage.push(<img
+          imageSection.push(<img
             src={this.props.guide}
             width={screenSize.width}
             alt={this.props.imageName}
@@ -94,7 +94,7 @@ class AnchoredImage extends React.Component {
           />);
         }
 
-        anchoredImage.push(
+        imageSection.push(
           <Draggable
             handle=".handle"
             key='anchor'
@@ -116,6 +116,25 @@ class AnchoredImage extends React.Component {
         );
       }
 
+      const scaleSlider = (
+        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+          <Typography variant='h6' component='h6'>Size</Typography>
+          <Slider
+            aria-label='Size'
+            defaultValue={50}
+            value={this.props.faceScale}
+            valueLabelFormat={(value) => value / 100 * 2}
+            valueLabelDisplay='auto'
+            marks={[
+              { value: 0, label: '0' },
+              { value: 50, label: '1' },
+              { value: 100, label: '2' },
+            ]}
+            onChange={this.props.onScaleChange}
+            onChangeCommitted={this.props.onScaleChangeCommitted}
+          />
+        </Stack>
+      );
       const guideSwitch = this.props.guide ? (
         <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
           <Typography variant='h6' component='h6'>Guide</Typography>
@@ -128,25 +147,9 @@ class AnchoredImage extends React.Component {
       return (
         <>
           <Box sx={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}>
-            {anchoredImage}
+            {imageSection}
           </Box>
-          <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-            <Typography variant='h6' component='h6'>Size</Typography>
-            <Slider
-              aria-label='Face size'
-              defaultValue={50}
-              value={this.props.faceScale}
-              valueLabelFormat={(value) => value / 100 * 2}
-              valueLabelDisplay='auto'
-              marks={[
-                { value: 0, label: '0' },
-                { value: 50, label: '1' },
-                { value: 100, label: '2' },
-              ]}
-              onChange={this.props.onScaleChange}
-              onChangeCommitted={this.props.onScaleChangeCommitted}
-            />
-          </Stack>
+          {scaleSlider}
           {guideSwitch}
         </>
       );
@@ -358,7 +361,7 @@ export default class App extends React.Component {
       return '';
     }
     else {
-      return <AnchoredImage
+      return <ImageEditor
         imageName='face'
         src={this.state.face}
         size={this.state.faceSize}
@@ -376,7 +379,7 @@ export default class App extends React.Component {
     }
     else {
       const selectedImg = this.state.selectedImg;
-      return <AnchoredImage
+      return <ImageEditor
         imageName='selected'
         src={this.state.imgsEdited[selectedImg]}
         guide={this.state.imgGuides[selectedImg]}
