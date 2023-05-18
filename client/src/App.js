@@ -24,6 +24,7 @@ class AnchoredImage extends React.Component {
     this.state = {
       screenSize: null,
       screenPos: null,
+      iconSize: { width: 0, height: 0 },
       anchor: props.anchor,
     };
   }
@@ -75,6 +76,7 @@ class AnchoredImage extends React.Component {
 
       const screenSize = this.state.screenSize;
       const screenPos = this.state.screenPos;
+      const iconSize = this.state.iconSize;
       if (screenSize != null && screenSize != null) {
         if (this.props.guide) {
           anchoredImage.push(<img
@@ -95,7 +97,16 @@ class AnchoredImage extends React.Component {
             bounds={{left: 0, top: 0, right: screenSize.width, bottom: screenSize.height}}
             onStop={(e, data) => this.handleDragStop(e, data)}
           >
-            <AnchorIcon className='handle' key='anchor' sx={{ position: 'absolute', top: screenPos.y, left: screenPos.x }}/>
+            <AnchorIcon
+              className='handle'
+              key='anchor'
+              sx={{ position: 'absolute', top: screenPos.y - iconSize.height / 2, left: screenPos.x - iconSize.width / 2 }}
+              onLoad={({target:el}) => {
+                const height = el.clientHeight;
+                const width = el.clientWidth;
+                this.setState({ iconSize: { width, height } });
+              }}
+            />
           </Draggable>
         );
       }
