@@ -9,6 +9,7 @@ import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
+import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 
 import AnchorIcon from '@mui/icons-material/Anchor';
@@ -70,11 +71,22 @@ class AnchoredImage extends React.Component {
             screenPos: { x, y },
           });
         }}
-        style={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}
       />];
+
       const screenSize = this.state.screenSize;
       const screenPos = this.state.screenPos;
-      if (screenSize != null) {
+      if (screenSize != null && screenSize != null) {
+        if (this.props.guide) {
+          anchoredImage.push(<img
+            src={this.props.guide}
+            width={screenSize.width}
+            alt={this.props.imageName}
+            loading="lazy"
+            key='guide'
+            style={{ opacity: 0.2, position: 'absolute', top: screenPos.y, left: screenPos.x }}
+          />);
+        }
+
         anchoredImage.push(
           <Draggable
             handle=".handle"
@@ -87,7 +99,13 @@ class AnchoredImage extends React.Component {
           </Draggable>
         );
       }
-      return anchoredImage;
+      return (
+        <Box
+          sx={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}
+        >
+          {anchoredImage}
+        </Box>
+      );
     }
   }
 }
@@ -98,6 +116,8 @@ export default class App extends React.Component {
     this.state = {
       face: '',
       imgs: [],
+      imgGuides: [],
+      isGuideOn: true,
       imgsEdited: [],
       selectedImg: null,
       faceSize: null,
@@ -111,26 +131,42 @@ export default class App extends React.Component {
 
   handleFaceUpload(e) {
     e.preventDefault();
-    if (!e.target.files)
-      return;
-    
-    const file = e.target.files[0];
-    const fileReader = new FileReader();
-    fileReader.readAsDataURL(file);
-    const self = this;
-    fileReader.addEventListener("load", function () {
-      self.setState({ face: this.result });
-      // Get gif dimensions
-      self.getImgSize(this.result, (size) => self.setState({
+    this.readFileImgUrls(e.target.files, (urls) => {
+      const img = urls[0];
+      this.setState({ face: img });
+      this.getImgSize(img, (size) => this.setState({
         faceSize: size,
         faceAnchor: { x: size.width / 2, y: size.height / 2 },
-      }, () => self.fetchEditedImg(0)));
+      }, () => this.fetchEditedImg()));
     });
   }
 
   async handleImagesUpload(e) {
     e.preventDefault();
-    const files = e.target.files;
+    this.readFileImgUrls(e.target.files, (urls) => {
+      this.setState({ imgs: urls, imgsEdited: urls });
+
+      // Get gif dimensions
+      this.getImgSize(urls[0], (size) => this.setState({
+        gifSize: size,
+        gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
+      }, () => this.fetchEditedImg()));
+
+      // Select first image if first upload
+      if (this.state.selectedImg == null)
+        this.setState({ selectedImg: 0 });
+    });
+  }
+
+  handleGuidesUpload(e) {
+    e.preventDefault();
+    this.readFileImgUrls(e.target.files, (urls) => {
+      this.setState({ imgGuides: urls });
+      this.fetchEditedImg()
+    });
+  }
+
+  readFileImgUrls(files, callback) {
     if (!files)
       return;
 
@@ -149,55 +185,17 @@ export default class App extends React.Component {
       readers.push(readFile(file));
     
     // Trigger Promises
-    Promise.all(readers).then((urls) => {
-      // Add uploaded images
-      let newImgs = cloneDeep(this.state.imgs);
-      for (const url of urls)
-        newImgs.push(url);
-      this.setState({ imgs: newImgs, imgsEdited: newImgs })
-
-      // Get gif dimensions
-      this.getImgSize(urls[0], (size) => this.setState({
-        gifSize: size,
-        gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
-      }, () => this.fetchEditedImg(0)));
-
-      // Select first image if first upload
-      if (this.state.selectedImg == null)
-        this.setState({ selectedImg: 0 });
-    });
-
-
-
-    // let data = new FormData()
-    // for (const file of files)
-    //   data.append('images', file)
-
-    // const response = await fetch('/testAPI', {
-    //   method: "POST",
-    //   body: data,
-    // });
-    // if (!response.ok)
-    //   return;
-
-    // let newImgs = cloneDeep(this.state.imgs);
-    // const imgs = await response.json();
-    // for (const img of imgs)
-    //   newImgs.push(img);
-    // this.setState({ imgs: newImgs, imgsEdited: newImgs })
-    // this.setState({ selectedImg: 0 });
-    // this.getImgSize(imgs[0], (size) => this.setState({
-    //   gifSize: size,
-    //   gifAnchors: Array(imgs.length).fill({ x: size.width / 2, y: size.height / 2 }),
-    // }, () => this.fetchEditedImg(0)));
+    Promise.all(readers).then(callback);
   }
 
-  async fetchEditedImg(i) {
-    const faceSize = this.state.faceSize;
-    const gifSize = this.state.gifSize;
+  async fetchEditedImg() {
     if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors'))
       return;
     
+    const imgIndex = this.state.selectedImg;
+    const faceSize = this.state.faceSize;
+    const gifSize = this.state.gifSize;
+
     const scale = this.state.faceScale / 100 * 2;
     let faceScaleSize = {};
     if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
@@ -212,12 +210,12 @@ export default class App extends React.Component {
     
     let data = new FormData();
     data.append('face', this.state.face);
-    data.append('image', this.state.imgs[i]);
+    data.append('image', this.state.imgs[imgIndex]);
     data.append('faceSize', JSON.stringify(faceSize));
     data.append('gifSize', JSON.stringify(gifSize));
     data.append('faceScaleSize', JSON.stringify(faceScaleSize));
     data.append('faceAnchor', JSON.stringify(this.state.faceAnchor));
-    data.append('imageAnchor', JSON.stringify(this.state.gifAnchors[i]));
+    data.append('imageAnchor', JSON.stringify(this.state.gifAnchors[imgIndex]));
     const response = await fetch('/testAPI', {
       method: "POST",
       body: data,
@@ -226,7 +224,7 @@ export default class App extends React.Component {
       return;
 
     let newImgsEdited = cloneDeep(this.state.imgsEdited);
-    newImgsEdited[i] = await response.text();
+    newImgsEdited[imgIndex] = await response.text();
     this.setState({ imgsEdited: newImgsEdited });
   }
 
@@ -254,7 +252,11 @@ export default class App extends React.Component {
 
   handleFaceScaleChangeCommitted(e, v) {
     this.setState({ faceScale: v });
-    this.fetchEditedImg(this.state.selectedImg);
+    this.fetchEditedImg();
+  }
+
+  handleIsGuideOnChange(e, c) {
+    this.setState({ isGuideOn: c });
   }
 
   handleClickImage(i) {
@@ -290,7 +292,7 @@ export default class App extends React.Component {
         src={this.state.face}
         size={this.state.faceSize}
         anchor={this.state.faceAnchor}
-        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, () => this.fetchEditedImg(this.state.selectedImg))}
+        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, () => this.fetchEditedImg())}
       />;
     }
   }
@@ -304,12 +306,13 @@ export default class App extends React.Component {
       return <AnchoredImage
         imageName='selected'
         src={this.state.imgsEdited[selectedImg]}
+        guide={this.state.isGuideOn ? this.state.imgGuides[selectedImg] : null}
         size={this.state.gifSize}
         anchor={this.state.gifAnchors[selectedImg]}
         onAnchorChange={(anchor) => {
           let newGifAnchors = cloneDeep(this.state.gifAnchors);
           newGifAnchors[selectedImg] = anchor;
-          this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg(this.state.selectedImg));
+          this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg());
         }}
         key={selectedImg} // jank
       />;
@@ -340,8 +343,16 @@ export default class App extends React.Component {
                   variant="outlined"
                   startIcon={<UploadFileIcon />}
                 >
-                  Upload Images
+                  Upload Images with Holes
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
+                </Button>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<UploadFileIcon />}
+                >
+                  Upload Image Guides
+                  <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
                 </Button>
               </Box>
               {face}
@@ -367,6 +378,13 @@ export default class App extends React.Component {
           <Grid item xs={5} sx={{ height: '100%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               {selectedImg}
+              <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+                <Typography variant='h6' component='h6'>Guide</Typography>
+                <Switch
+                  checked={this.state.isGuideOn}
+                  onChange={(e, c) => this.handleIsGuideOnChange(e, c)}
+                />
+              </Stack>
             </Paper>
           </Grid>
           <Grid item xs={2} sx={{ height: '100%' }}>
