@@ -4,6 +4,10 @@
 
 I wanted to make it easier to photoshop my friend's face into gifs!
 
+## To-do
+
+- Test speed on lower res images
+
 ## Credits
 
 [Multer](https://github.com/expressjs/multer)  
