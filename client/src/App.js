@@ -26,6 +26,7 @@ class AnchoredImage extends React.Component {
       screenPos: null,
       iconSize: { width: 0, height: 0 },
       anchor: props.anchor,
+      isGuideOn: true,
     };
   }
 
@@ -49,6 +50,10 @@ class AnchoredImage extends React.Component {
     const newAnchor = this.screenToActual(data);
     this.props.onAnchorChange(newAnchor);
     this.setState({anchor: newAnchor});
+  }
+
+  handleIsGuideOn(e, c) {
+    this.setState({ isGuideOn: c });
   }
 
   render() {
@@ -78,14 +83,14 @@ class AnchoredImage extends React.Component {
       const screenPos = this.state.screenPos;
       const iconSize = this.state.iconSize;
       if (screenSize != null && screenSize != null) {
-        if (this.props.guide) {
+        if (this.state.isGuideOn && this.props.guide) {
           anchoredImage.push(<img
             src={this.props.guide}
             width={screenSize.width}
             alt={this.props.imageName}
             loading="lazy"
             key='guide'
-            style={{ opacity: 0.2, position: 'absolute', top: screenPos.y, left: screenPos.x }}
+            style={{ opacity: 0.3, position: 'absolute', top: screenPos.y, left: screenPos.x }}
           />);
         }
 
@@ -110,6 +115,16 @@ class AnchoredImage extends React.Component {
           </Draggable>
         );
       }
+
+      const guideSwitch = this.props.guide ? (
+        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+          <Typography variant='h6' component='h6'>Guide</Typography>
+          <Switch
+            checked={this.state.isGuideOn}
+            onChange={this.handleIsGuideOn.bind(this)}
+          />
+        </Stack>
+      ) : '';
       return (
         <>
           <Box sx={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}>
@@ -132,6 +147,7 @@ class AnchoredImage extends React.Component {
               onChangeCommitted={this.props.onScaleChangeCommitted}
             />
           </Stack>
+          {guideSwitch}
         </>
       );
     }
@@ -145,7 +161,6 @@ export default class App extends React.Component {
       face: '',
       imgs: [],
       imgGuides: [],
-      isGuideOn: true,
       imgsEdited: [],
       selectedImg: null,
       faceSize: null,
@@ -315,10 +330,6 @@ export default class App extends React.Component {
     this.fetchEditedImg();
   }
 
-  handleIsGuideOnChange(e, c) {
-    this.setState({ isGuideOn: c });
-  }
-
   handleClickImage(i) {
     this.setState({ selectedImg: i });
   }
@@ -368,7 +379,7 @@ export default class App extends React.Component {
       return <AnchoredImage
         imageName='selected'
         src={this.state.imgsEdited[selectedImg]}
-        guide={this.state.isGuideOn ? this.state.imgGuides[selectedImg] : null}
+        guide={this.state.imgGuides[selectedImg]}
         size={this.state.gifSize}
         anchor={this.state.gifAnchors[selectedImg]}
         onAnchorChange={(anchor) => {
@@ -425,13 +436,6 @@ export default class App extends React.Component {
           <Grid item xs={5} sx={{ height: '100%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               {selectedImg}
-              <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-                <Typography variant='h6' component='h6'>Guide</Typography>
-                <Switch
-                  checked={this.state.isGuideOn}
-                  onChange={(e, c) => this.handleIsGuideOnChange(e, c)}
-                />
-              </Stack>
             </Paper>
           </Grid>
           <Grid item xs={2} sx={{ height: '100%' }}>
