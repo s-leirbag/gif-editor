@@ -1,6 +1,8 @@
 import React from 'react';
 import './App.css';
 import Draggable from 'react-draggable';
+import JSZip from 'jszip';
+import FileSaver from 'file-saver';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -13,6 +15,7 @@ import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 
 import AnchorIcon from '@mui/icons-material/Anchor';
+import DownloadIcon from '@mui/icons-material/Download';
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { cloneDeep } from 'lodash';
@@ -231,6 +234,20 @@ export default class App extends React.Component {
     });
   }
 
+  handleDownload(e) {
+    e.preventDefault();
+    const zip = new JSZip();
+    const imgsEdited = this.state.imgsEdited;
+    for (let i = 0; i < imgsEdited.length; i++) {
+      const img = imgsEdited[i];
+      const imgName = `img${i}.png`;
+      zip.file(imgName, img.split(",")[1], { base64: true });
+    }
+    zip.generateAsync({ type: "blob" }).then(function (content) {
+      FileSaver.saveAs(content, "edited_gif.zip");
+    });
+  }
+
   readFileImgUrls(files, callback) {
     if (!files)
       return;
@@ -420,17 +437,27 @@ export default class App extends React.Component {
                   component="label"
                   variant="outlined"
                   startIcon={<UploadFileIcon />}
+                  sx={{ marginRight: "1rem" }}
                 >
-                  Upload Images with Holes
+                  Upload Images
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
                 </Button>
                 <Button
                   component="label"
                   variant="outlined"
                   startIcon={<UploadFileIcon />}
+                  sx={{ marginRight: "1rem" }}
                 >
-                  Upload Image Guides
+                  Upload Overlays
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
+                </Button>
+                <Button
+                  component="label"
+                  variant="outlined"
+                  startIcon={<DownloadIcon />}
+                  onClick={(e) => this.handleDownload(e)}
+                >
+                  Download
                 </Button>
               </Box>
               {face}
@@ -444,9 +471,7 @@ export default class App extends React.Component {
           <Grid item xs={2} sx={{ height: '100%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               <Box sx={{ height: '100%', display: 'block', overflow: 'auto' }}>
-                {this.state.imgsEdited.map((image, index) => (
-                  this.renderImg(index)
-                ))}
+                {this.state.imgsEdited.map((image, index) => (this.renderImg(index)))}
               </Box>
             </Paper>
           </Grid>
