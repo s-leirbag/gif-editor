@@ -177,6 +177,7 @@ export default class App extends React.Component {
       faceScale: 50,
       gifFaceScales: [],
     };
+    this.selImgRef = React.createRef();
   }
 
   componentDidMount() {
@@ -190,10 +191,11 @@ export default class App extends React.Component {
   handleKeyDown = (event) => {
     const selectedImg = this.state.selectedImg;
     const imgsLength = this.state.imgs.length;
-    if (event.key === 'ArrowUp')
-      this.setState({ selectedImg: selectedImg === 0 ? imgsLength - 1 : selectedImg - 1 });
-    if (event.key === 'ArrowDown')
-      this.setState({ selectedImg: (selectedImg + 1) % imgsLength });
+    const scrollIntoView = () => this.selImgRef.current.scrollIntoView();
+    if (event.key === 'ArrowUp' || event.key === 'ArrowLeft')
+      this.setState({ selectedImg: selectedImg === 0 ? imgsLength - 1 : selectedImg - 1 }, scrollIntoView);
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight')
+      this.setState({ selectedImg: (selectedImg + 1) % imgsLength }, scrollIntoView);
   }
 
   handleFaceUpload(e) {
@@ -355,10 +357,13 @@ export default class App extends React.Component {
   }
 
   renderImg(i) {
-    // Highlight image if selected
-    let bgCol;
-    if (this.state.selectedImg === i)
+    // If image selected, highlight border
+    // And create ref to scroll to image
+    let bgCol, ref;
+    if (this.state.selectedImg === i) {
       bgCol = 'yellow';
+      ref = this.selImgRef;
+    }
     
     return (
       <Box
@@ -367,8 +372,9 @@ export default class App extends React.Component {
         src={this.state.imgsEdited[i]}
         alt={'image ' + i}
         loading='lazy'
-        sx={{ width: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
+        sx={{ mr: 1, height: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
         onClick={() => this.handleClickImage(i)}
+        ref={ref}
       />
     );
   }
@@ -463,17 +469,17 @@ export default class App extends React.Component {
               {face}
             </Paper>
           </Grid>
-          <Grid item xs={5} sx={{ height: '100%' }}>
-            <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
+          <Grid item xs={7} sx={{ height: '100%' }}>
+            <Paper sx={{ p: 2, height: '70%' }} elevation={4}>
               {selectedImg}
             </Paper>
-          </Grid>
-          <Grid item xs={2} sx={{ height: '100%' }}>
-            <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-              <Box sx={{ height: '100%', display: 'block', overflow: 'auto' }}>
-                {this.state.imgsEdited.map((image, index) => (this.renderImg(index)))}
-              </Box>
-            </Paper>
+            <Box sx={{ pt: 2, height: '30%' }}>
+              <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
+                <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
+                  {this.state.imgsEdited.map((image, index) => (this.renderImg(index)))}
+                </Box>
+              </Paper>
+            </Box>
           </Grid>
         </Grid>
       </div>
