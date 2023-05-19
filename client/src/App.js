@@ -8,6 +8,7 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
@@ -16,6 +17,8 @@ import Typography from '@mui/material/Typography';
 
 import AnchorIcon from '@mui/icons-material/Anchor';
 import DownloadIcon from '@mui/icons-material/Download';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { cloneDeep } from 'lodash';
@@ -105,16 +108,32 @@ class ImageEditor extends React.Component {
             bounds={{left: 0, top: 0, right: screenSize.width, bottom: screenSize.height}}
             onStop={(e, data) => this.handleDragStop(e, data)}
           >
-            <AnchorIcon
+            <Paper
               className='handle'
-              key='anchor'
-              sx={{ position: 'absolute', top: screenPos.y - iconSize.height / 2, left: screenPos.x - iconSize.width / 2 }}
-              onLoad={({target:el}) => {
-                const height = el.clientHeight;
-                const width = el.clientWidth;
-                this.setState({ iconSize: { width, height } });
+              sx={{
+                position: 'absolute',
+                top: screenPos.y - iconSize.height / 2,
+                left: screenPos.x - iconSize.width / 2,
+                borderRadius: 100,
+                opacity: 0.6,
               }}
-            />
+              elevation={4}
+            >
+              <IconButton
+                component="label"
+                variant="outlined"
+                sx={{ borderRadius: 100 }}
+              >
+                <AnchorIcon
+                  key='anchor'
+                  onLoad={({target:el}) => {
+                    const height = el.clientHeight;
+                    const width = el.clientWidth;
+                    this.setState({ iconSize: { width, height } });
+                  }}
+                />
+              </IconButton>
+            </Paper>
           </Draggable>
         );
       }
@@ -176,6 +195,7 @@ export default class App extends React.Component {
       gifAnchors: [],
       faceScale: 50,
       gifFaceScales: [],
+      playIntervalId: null,
     };
     this.selImgRef = React.createRef();
   }
@@ -191,12 +211,31 @@ export default class App extends React.Component {
   handleKeyDown = (event) => {
     const selectedImg = this.state.selectedImg;
     const imgsLength = this.state.imgs.length;
-    const scrollIntoView = () => this.selImgRef.current.scrollIntoView();
     if (event.key === 'ArrowUp' || event.key === 'ArrowLeft')
-      this.setState({ selectedImg: selectedImg === 0 ? imgsLength - 1 : selectedImg - 1 }, scrollIntoView);
+      this.setState({ selectedImg: selectedImg === 0 ? imgsLength - 1 : selectedImg - 1 }, this.scrollIntoView);
     if (event.key === 'ArrowDown' || event.key === 'ArrowRight')
-      this.setState({ selectedImg: (selectedImg + 1) % imgsLength }, scrollIntoView);
+      this.setState({ selectedImg: (selectedImg + 1) % imgsLength }, this.scrollIntoView);
   }
+
+  handlePlayPause = (event) => {
+    if (this.state.playIntervalId) {
+      clearInterval(this.state.playIntervalId);
+      this.setState({
+        playIntervalId: null,
+      });
+    }
+    else {
+      const imgsLength = this.state.imgs.length;
+      this.setState({
+        selectedImg: 0,
+        playIntervalId: setInterval(() => {
+            this.setState({ selectedImg: (this.state.selectedImg + 1) % imgsLength }, this.scrollIntoView);
+        }, 100),
+      });
+    }
+  }
+
+  scrollIntoView = () => this.selImgRef.current.scrollIntoView();
 
   handleFaceUpload(e) {
     e.preventDefault();
@@ -420,9 +459,42 @@ export default class App extends React.Component {
     }
   }
 
+  renderScroll() {
+    if (this.state.imgsEdited.length !== 0) {
+      return <>
+        <Stack sx={{ position: 'absolute' }} spacing={2} direction="row" alignItems="center">
+          <Paper sx={{ borderRadius: 100 }} elevation={4}>
+            <IconButton
+              component="label"
+              variant="outlined"
+              onClick={(e) => this.handlePlayPause(e)}
+              sx={{ borderRadius: 100 }}
+            >
+              {this.state.playIntervalId ? <PauseIcon /> : <PlayArrowIcon />}
+            </IconButton>
+          </Paper>
+          <Paper sx={{ borderRadius: 100 }} elevation={4}>
+            <IconButton
+              component="label"
+              variant="outlined"
+              onClick={(e) => this.handleDownload(e)}
+              sx={{ borderRadius: 100 }}
+            >
+              <DownloadIcon />
+            </IconButton>
+          </Paper>
+        </Stack>
+        <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
+          {this.state.imgsEdited.map((image, index) => (this.renderImg(index)))}
+        </Box>
+      </>
+    }
+  }
+
   render() {
     const face = this.renderFace();
     const selectedImg = this.renderSelectedImg();
+    const scroll = this.renderScroll();
     return (
       <div className="App">
         <CssBaseline />
@@ -457,14 +529,6 @@ export default class App extends React.Component {
                   Upload Overlays
                   <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
                 </Button>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<DownloadIcon />}
-                  onClick={(e) => this.handleDownload(e)}
-                >
-                  Download
-                </Button>
               </Box>
               {face}
             </Paper>
@@ -475,9 +539,7 @@ export default class App extends React.Component {
             </Paper>
             <Box sx={{ pt: 2, height: '30%' }}>
               <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-                <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
-                  {this.state.imgsEdited.map((image, index) => (this.renderImg(index)))}
-                </Box>
+                {scroll}
               </Paper>
             </Box>
           </Grid>
