@@ -32,7 +32,6 @@ class ImageEditor extends React.Component {
       screenPos: null,
       iconSize: { width: 0, height: 0 },
       anchor: props.anchor,
-      isOverlayOn: true,
     };
   }
 
@@ -56,10 +55,6 @@ class ImageEditor extends React.Component {
     const newAnchor = this.screenToActual(data);
     this.props.onAnchorChange(newAnchor);
     this.setState({anchor: newAnchor});
-  }
-
-  handleIsOverlayOn(e, c) {
-    this.setState({ isOverlayOn: c });
   }
 
   render() {
@@ -93,7 +88,7 @@ class ImageEditor extends React.Component {
       const screenPos = this.state.screenPos;
       const iconSize = this.state.iconSize;
       if (screenSize != null && screenSize != null) {
-        if (this.state.isOverlayOn && this.props.overlay) {
+        if (this.props.isOverlayOn && this.props.overlay) {
           imageSection.push(<img
             src={this.props.overlay}
             alt={this.props.imageName}
@@ -177,8 +172,8 @@ class ImageEditor extends React.Component {
           <Stack spacing={0.5} direction="row" alignItems="center">
             <Typography variant='h6' component='h6'>Overlay</Typography>
             <Switch
-              checked={this.state.isOverlayOn}
-              onChange={this.handleIsOverlayOn.bind(this)}
+              checked={this.props.isOverlayOn}
+              onChange={this.props.onOverlayChange}
             />
           </Stack>
         </Paper>
@@ -202,9 +197,10 @@ export default class App extends React.Component {
     this.state = {
       face: '',
       imgs: [],
-      overlays: [],
       imgsEdited: [],
       selectedImg: null,
+      overlays: [],
+      isOverlayOn: true,
       faceSize: null,
       faceScaleSize: null,
       gifSize: null,
@@ -290,6 +286,10 @@ export default class App extends React.Component {
       this.setState({ overlays: urls });
       this.fetchEditedImg()
     });
+  }
+
+  handleIsOverlayOn(e, c) {
+    this.setState({ isOverlayOn: c });
   }
 
   handleDownload(e) {
@@ -490,6 +490,7 @@ export default class App extends React.Component {
             imageName='selected'
             src={this.state.imgsEdited[selectedImg]}
             overlay={this.state.overlays[selectedImg]}
+            isOverlayOn={this.state.isOverlayOn}
             size={this.state.gifSize}
             anchor={this.state.gifAnchors[selectedImg]}
             onAnchorChange={(anchor) => {
@@ -499,6 +500,7 @@ export default class App extends React.Component {
             }}
             onScaleChange={this.handleSelImgScaleChange.bind(this)}
             onScaleChangeCommitted={this.handleSelImgScaleChangeCommitted.bind(this)}
+            onOverlayChange={this.handleIsOverlayOn.bind(this)}
             key={selectedImg} // jank?
           />
         </>
