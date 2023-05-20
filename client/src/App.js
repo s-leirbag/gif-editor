@@ -69,7 +69,6 @@ class ImageEditor extends React.Component {
     else {
       const imageSection = [<img
         src={this.props.src}
-        width={'100%'}
         alt={this.props.imageName}
         loading="lazy"
         key='image'
@@ -82,6 +81,11 @@ class ImageEditor extends React.Component {
             screenSize: { width, height },
             screenPos: { x, y },
           });
+        }}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
         }}
       />];
 
@@ -158,22 +162,32 @@ class ImageEditor extends React.Component {
         </Stack>
       );
       const guideSwitch = this.props.guide ? (
-        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
-          <Typography variant='h6' component='h6'>Guide</Typography>
-          <Switch
-            checked={this.state.isGuideOn}
-            onChange={this.handleIsGuideOn.bind(this)}
-          />
-        </Stack>
+        <Paper
+          sx={{
+            position: 'absolute',
+            p: 1,
+            borderRadius: 100,
+          }}
+          elevation={4}
+          alignItems="center"
+        >
+          <Stack spacing={0.5} direction="row" alignItems="center">
+            <Typography variant='h6' component='h6'>Guide</Typography>
+            <Switch
+              checked={this.state.isGuideOn}
+              onChange={this.handleIsGuideOn.bind(this)}
+            />
+          </Stack>
+        </Paper>
       ) : '';
       return (
-        <>
-          <Box sx={{borderColor: 'black', borderWidth: 2, borderStyle: 'solid'}}>
+        <Box sx={{ height: 'calc(100% - 53px)', display: 'flex', flexDirection: 'column' }}>
+          <Box sx={{ height: 'calc(100% - 40px)', borderColor: 'black', borderWidth: 2, borderStyle: 'solid' }}>
             {imageSection}
           </Box>
           {scaleSlider}
           {guideSwitch}
-        </>
+        </Box>
       );
     }
   }
@@ -491,56 +505,74 @@ export default class App extends React.Component {
     }
   }
 
+  renderUploadButtons() {
+    const uploadFace = this.state.face ? null : (
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<UploadFileIcon />}
+        sx={{ marginRight: "1rem" }}
+      >
+        Upload Face
+        <input type="file" accept="image/*" hidden onChange={(e) => this.handleFaceUpload(e)} />
+      </Button>
+    );
+    const uploadImages = this.state.imgsEdited && this.state.imgsEdited.length > 0 ? null : (
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<UploadFileIcon />}
+        sx={{ marginRight: "1rem" }}
+      >
+        Upload Images
+        <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
+      </Button>
+    );
+    const uploadOverlays = this.state.imgGuides && this.state.imgGuides.length > 0 ? null : (
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<UploadFileIcon />}
+        sx={{ marginRight: "1rem" }}
+      >
+        Upload Overlays
+        <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
+      </Button>
+    );
+    return (
+      <Box>
+        {uploadFace}
+        {uploadImages}
+        {uploadOverlays}
+      </Box>
+    );
+  }
+
   render() {
     const face = this.renderFace();
     const selectedImg = this.renderSelectedImg();
     const scroll = this.renderScroll();
+    const uploadButtons = this.renderUploadButtons();
     return (
       <div className="App">
         <CssBaseline />
         <Grid container columnSpacing={2} sx={{ p: 2, height: '100vh' }}>
-          <Grid item xs={5}>
-            <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-              <Box>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<UploadFileIcon />}
-                  sx={{ marginRight: "1rem" }}
-                >
-                  Upload Face
-                  <input type="file" accept="image/*" hidden onChange={(e) => this.handleFaceUpload(e)} />
-                </Button>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<UploadFileIcon />}
-                  sx={{ marginRight: "1rem" }}
-                >
-                  Upload Images
-                  <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
-                </Button>
-                <Button
-                  component="label"
-                  variant="outlined"
-                  startIcon={<UploadFileIcon />}
-                  sx={{ marginRight: "1rem" }}
-                >
-                  Upload Overlays
-                  <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
-                </Button>
-              </Box>
+          <Grid item xs={6} sx={{ height: '70%' }}>
+            <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }} elevation={4}>
               {face}
+              {uploadButtons}
             </Paper>
           </Grid>
-          <Grid item xs={7} sx={{ height: '100%' }}>
-            <Paper sx={{ p: 2, height: '70%' }} elevation={4}>
-              {selectedImg}
-            </Paper>
-            <Box sx={{ pt: 2, height: '30%' }}>
-              <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-                {scroll}
-              </Paper>
+          <Grid item xs={6} sx={{ height: '70%' }}>
+            <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
+               {selectedImg}
+             </Paper>
+          </Grid>
+          <Grid item xs={12} sx={{ height: '30%' }}>
+            <Box sx={{ pt: 2, height: '100%' }}>
+               <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
+                 {scroll}
+               </Paper>
             </Box>
           </Grid>
         </Grid>
