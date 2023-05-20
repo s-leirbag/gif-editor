@@ -32,7 +32,7 @@ class ImageEditor extends React.Component {
       screenPos: null,
       iconSize: { width: 0, height: 0 },
       anchor: props.anchor,
-      isGuideOn: true,
+      isOverlayOn: true,
     };
   }
 
@@ -58,8 +58,8 @@ class ImageEditor extends React.Component {
     this.setState({anchor: newAnchor});
   }
 
-  handleIsGuideOn(e, c) {
-    this.setState({ isGuideOn: c });
+  handleIsOverlayOn(e, c) {
+    this.setState({ isOverlayOn: c });
   }
 
   render() {
@@ -93,12 +93,12 @@ class ImageEditor extends React.Component {
       const screenPos = this.state.screenPos;
       const iconSize = this.state.iconSize;
       if (screenSize != null && screenSize != null) {
-        if (this.state.isGuideOn && this.props.guide) {
+        if (this.state.isOverlayOn && this.props.overlay) {
           imageSection.push(<img
-            src={this.props.guide}
+            src={this.props.overlay}
             alt={this.props.imageName}
             loading="lazy"
-            key='guide'
+            key='overlay'
             style={{
               width: screenSize.width, height: screenSize.height, objectFit: 'contain',
               position: 'absolute', top: screenPos.y, left: screenPos.x,
@@ -164,7 +164,7 @@ class ImageEditor extends React.Component {
           />
         </Stack>
       );
-      const guideSwitch = this.props.guide ? (
+      const overlaySwitch = this.props.overlay ? (
         <Paper
           sx={{
             position: 'absolute',
@@ -175,10 +175,10 @@ class ImageEditor extends React.Component {
           alignItems="center"
         >
           <Stack spacing={0.5} direction="row" alignItems="center">
-            <Typography variant='h6' component='h6'>Guide</Typography>
+            <Typography variant='h6' component='h6'>Overlay</Typography>
             <Switch
-              checked={this.state.isGuideOn}
-              onChange={this.handleIsGuideOn.bind(this)}
+              checked={this.state.isOverlayOn}
+              onChange={this.handleIsOverlayOn.bind(this)}
             />
           </Stack>
         </Paper>
@@ -189,7 +189,7 @@ class ImageEditor extends React.Component {
             {imageSection}
           </Box>
           {scaleSlider}
-          {guideSwitch}
+          {overlaySwitch}
         </Box>
       );
     }
@@ -202,7 +202,7 @@ export default class App extends React.Component {
     this.state = {
       face: '',
       imgs: [],
-      imgGuides: [],
+      overlays: [],
       imgsEdited: [],
       selectedImg: null,
       faceSize: null,
@@ -284,10 +284,10 @@ export default class App extends React.Component {
     });
   }
 
-  handleGuidesUpload(e) {
+  handleOverlaysUpload(e) {
     e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
-      this.setState({ imgGuides: urls });
+      this.setState({ overlays: urls });
       this.fetchEditedImg()
     });
   }
@@ -489,7 +489,7 @@ export default class App extends React.Component {
           <ImageEditor
             imageName='selected'
             src={this.state.imgsEdited[selectedImg]}
-            guide={this.state.imgGuides[selectedImg]}
+            overlay={this.state.overlays[selectedImg]}
             size={this.state.gifSize}
             anchor={this.state.gifAnchors[selectedImg]}
             onAnchorChange={(anchor) => {
@@ -507,7 +507,7 @@ export default class App extends React.Component {
   }
 
   renderOverlayButton() {
-    return this.state.imgGuides && this.state.imgGuides.length > 0 ? null : (
+    return this.state.overlays && this.state.overlays.length > 0 ? null : (
       <Paper sx={{ position: 'absolute', borderRadius: 100, alignItems: "center" }} elevation={4}>
         <Button
           component="label"
@@ -516,7 +516,7 @@ export default class App extends React.Component {
           sx={{ borderRadius: 100 }}
         >
           <Typography variant="h6">Upload Overlays</Typography>
-          <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
+          <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleOverlaysUpload(e)} />
         </Button>
       </Paper>
     );
