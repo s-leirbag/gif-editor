@@ -72,6 +72,11 @@ class ImageEditor extends React.Component {
         alt={this.props.imageName}
         loading="lazy"
         key='image'
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+        }}
         onLoad={({target:img}) => {
           const height = img.clientHeight;
           const width = img.clientWidth;
@@ -82,11 +87,6 @@ class ImageEditor extends React.Component {
             screenPos: { x, y },
           });
         }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-        }}
       />];
 
       const screenSize = this.state.screenSize;
@@ -96,11 +96,14 @@ class ImageEditor extends React.Component {
         if (this.state.isGuideOn && this.props.guide) {
           imageSection.push(<img
             src={this.props.guide}
-            width={screenSize.width}
             alt={this.props.imageName}
             loading="lazy"
             key='guide'
-            style={{ opacity: 0.3, position: 'absolute', top: screenPos.y, left: screenPos.x }}
+            style={{
+              width: screenSize.width, height: screenSize.height, objectFit: 'contain',
+              position: 'absolute', top: screenPos.y, left: screenPos.x,
+              opacity: 0.3,
+            }}
           />);
         }
 
@@ -182,7 +185,7 @@ class ImageEditor extends React.Component {
       ) : '';
       return (
         <Box sx={{ height: 'calc(100% - 53px)', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ height: 'calc(100% - 40px)', borderColor: 'black', borderWidth: 2, borderStyle: 'solid' }}>
+          <Box sx={{ height: '100%', borderColor: 'black', borderWidth: 2, borderStyle: 'solid' }}>
             {imageSection}
           </Box>
           {scaleSlider}
@@ -434,7 +437,19 @@ export default class App extends React.Component {
 
   renderFace() {
     if (this.isAnyVarsNull('faceSize', 'faceAnchor')) {
-      return '';
+      return (
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<UploadFileIcon />}
+            sx={{ marginRight: "1rem" }}
+          >
+            <Typography variant="h6" component='h6'>Upload Face</Typography>
+            <input type="file" accept="image/*" hidden onChange={(e) => this.handleFaceUpload(e)} />
+          </Button>
+        </Box>
+      );
     }
     else {
       return <ImageEditor
@@ -451,26 +466,60 @@ export default class App extends React.Component {
 
   renderSelectedImg() {
     if (this.isAnyVarsNull('gifSize', 'gifAnchors')) {
-      return '';
+      return (
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <Button
+            component="label"
+            variant="outlined"
+            startIcon={<UploadFileIcon />}
+            sx={{ marginRight: "1rem" }}
+          >
+            <Typography variant="h6">Upload Images</Typography>
+            <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
+          </Button>
+        </Box>
+      );
     }
     else {
       const selectedImg = this.state.selectedImg;
-      return <ImageEditor
-        imageName='selected'
-        src={this.state.imgsEdited[selectedImg]}
-        guide={this.state.imgGuides[selectedImg]}
-        size={this.state.gifSize}
-        anchor={this.state.gifAnchors[selectedImg]}
-        onAnchorChange={(anchor) => {
-          let newGifAnchors = cloneDeep(this.state.gifAnchors);
-          newGifAnchors[selectedImg] = anchor;
-          this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg());
-        }}
-        onScaleChange={this.handleSelImgScaleChange.bind(this)}
-        onScaleChangeCommitted={this.handleSelImgScaleChangeCommitted.bind(this)}
-        key={selectedImg} // jank?
-      />;
+      const overlayButton = this.renderOverlayButton();
+      return (
+        <>
+          {overlayButton}
+          <ImageEditor
+            imageName='selected'
+            src={this.state.imgsEdited[selectedImg]}
+            guide={this.state.imgGuides[selectedImg]}
+            size={this.state.gifSize}
+            anchor={this.state.gifAnchors[selectedImg]}
+            onAnchorChange={(anchor) => {
+              let newGifAnchors = cloneDeep(this.state.gifAnchors);
+              newGifAnchors[selectedImg] = anchor;
+              this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg());
+            }}
+            onScaleChange={this.handleSelImgScaleChange.bind(this)}
+            onScaleChangeCommitted={this.handleSelImgScaleChangeCommitted.bind(this)}
+            key={selectedImg} // jank?
+          />
+        </>
+      );
     }
+  }
+
+  renderOverlayButton() {
+    return this.state.imgGuides && this.state.imgGuides.length > 0 ? null : (
+      <Paper sx={{ position: 'absolute', borderRadius: 100, alignItems: "center" }} elevation={4}>
+        <Button
+          component="label"
+          variant="outlined"
+          startIcon={<UploadFileIcon />}
+          sx={{ borderRadius: 100 }}
+        >
+          <Typography variant="h6">Upload Overlays</Typography>
+          <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
+        </Button>
+      </Paper>
+    );
   }
 
   renderScroll() {
@@ -505,74 +554,29 @@ export default class App extends React.Component {
     }
   }
 
-  renderUploadButtons() {
-    const uploadFace = this.state.face ? null : (
-      <Button
-        component="label"
-        variant="outlined"
-        startIcon={<UploadFileIcon />}
-        sx={{ marginRight: "1rem" }}
-      >
-        Upload Face
-        <input type="file" accept="image/*" hidden onChange={(e) => this.handleFaceUpload(e)} />
-      </Button>
-    );
-    const uploadImages = this.state.imgsEdited && this.state.imgsEdited.length > 0 ? null : (
-      <Button
-        component="label"
-        variant="outlined"
-        startIcon={<UploadFileIcon />}
-        sx={{ marginRight: "1rem" }}
-      >
-        Upload Images
-        <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
-      </Button>
-    );
-    const uploadOverlays = this.state.imgGuides && this.state.imgGuides.length > 0 ? null : (
-      <Button
-        component="label"
-        variant="outlined"
-        startIcon={<UploadFileIcon />}
-        sx={{ marginRight: "1rem" }}
-      >
-        Upload Overlays
-        <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleGuidesUpload(e)} />
-      </Button>
-    );
-    return (
-      <Box>
-        {uploadFace}
-        {uploadImages}
-        {uploadOverlays}
-      </Box>
-    );
-  }
-
   render() {
     const face = this.renderFace();
     const selectedImg = this.renderSelectedImg();
     const scroll = this.renderScroll();
-    const uploadButtons = this.renderUploadButtons();
     return (
       <div className="App">
         <CssBaseline />
         <Grid container columnSpacing={2} sx={{ p: 2, height: '100vh' }}>
           <Grid item xs={6} sx={{ height: '70%' }}>
-            <Paper sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', gap: 2 }} elevation={4}>
+            <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               {face}
-              {uploadButtons}
             </Paper>
           </Grid>
           <Grid item xs={6} sx={{ height: '70%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-               {selectedImg}
-             </Paper>
+              {selectedImg}
+            </Paper>
           </Grid>
           <Grid item xs={12} sx={{ height: '30%' }}>
             <Box sx={{ pt: 2, height: '100%' }}>
-               <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-                 {scroll}
-               </Paper>
+              <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
+                {scroll}
+              </Paper>
             </Box>
           </Grid>
         </Grid>
