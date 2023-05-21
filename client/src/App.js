@@ -198,20 +198,20 @@ export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      face: '',
-      imgs: [],
-      imgsEdited: [],
-      curImg: null,
-      overlays: [],
+      face: '', // uri of face to edit into iamges
+      imgs: [], // original images
+      imgsEdited: [], // edited images
+      curImg: null, // current image the user is editing
+      overlays: [], // overlays to help user edit easily
       isOverlayOn: true,
-      faceSize: null,
-      faceScaleSize: null,
-      gifSize: null,
-      faceAnchor: null,
-      gifAnchors: [],
-      faceScale: 50,
-      gifFaceScales: [],
-      playIntervalId: null,
+      faceSize: null, // face size in pixels
+      faceScaleSize: null, // scaled face size in pixels
+      gifSize: null, // gif images size in pixels
+      faceAnchor: null, // anchor position on face in pixels
+      gifAnchors: [], // anchor position on gif images in pixels
+      faceScale: 50, // slider value for face scale
+      gifFaceScales: [], // compounding scale for face in each gif image
+      playIntervalId: null, // interval for playing gif
     };
     this.curImgRef = React.createRef();
   }
