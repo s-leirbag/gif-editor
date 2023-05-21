@@ -27,6 +27,11 @@ router.post("/", cpUpload, async (req, res) => {
   let face = Buffer.from(faceBase64, 'base64');
   const gifImg = Buffer.from(imgBase64, 'base64');
 
+  if (faceScaleSize.width === 0 || faceScaleSize.height === 0) {
+    res.send(req.body.image);
+    return;
+  }
+  
   face = await sharp(face).resize(faceScaleSize.width, faceScaleSize.height).toBuffer();
   face = await translate(face, imgAnchor.x - faceAnchor.x, imgAnchor.y - faceAnchor.y);
   face = await resizeCanvas(face, gifSize.width, gifSize.height);

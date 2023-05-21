@@ -7,6 +7,7 @@ import FileSaver from 'file-saver';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import Checkbox from '@mui/material/Checkbox';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -30,7 +31,7 @@ class ImageEditor extends React.Component {
     this.state = {
       screenSize: null,
       screenPos: null,
-      iconSize: { width: 0, height: 0 },
+      // iconSize: { width: 0, height: 0 },
       anchor: props.anchor,
     };
   }
@@ -86,7 +87,7 @@ class ImageEditor extends React.Component {
 
       const screenSize = this.state.screenSize;
       const screenPos = this.state.screenPos;
-      const iconSize = this.state.iconSize;
+      // const iconSize = this.state.iconSize;
       if (screenSize != null && screenSize != null) {
         if (this.props.isOverlayOn && this.props.overlay) {
           imageSection.push(<img
@@ -101,7 +102,6 @@ class ImageEditor extends React.Component {
             }}
           />);
         }
-
         imageSection.push(
           <Draggable
             handle=".handle"
@@ -114,8 +114,11 @@ class ImageEditor extends React.Component {
               className='handle'
               sx={{
                 position: 'absolute',
-                top: screenPos.y - iconSize.height / 2,
-                left: screenPos.x - iconSize.width / 2,
+                // top: screenPos.y - iconSize.height / 2,
+                // left: screenPos.x - iconSize.width / 2,
+                top: screenPos.y,
+                left: screenPos.x,
+                transform: 'translate(-50%, -50%)',
                 borderRadius: 100,
                 opacity: 0.6,
               }}
@@ -128,11 +131,11 @@ class ImageEditor extends React.Component {
               >
                 <AnchorIcon
                   key='anchor'
-                  onLoad={({target:el}) => {
-                    const height = el.clientHeight;
-                    const width = el.clientWidth;
-                    this.setState({ iconSize: { width, height } });
-                  }}
+                  // onLoad={({target:el}) => {
+                  //   const height = el.clientHeight;
+                  //   const width = el.clientWidth;
+                  //   this.setState({ iconSize: { width, height } });
+                  // }}
                 />
               </IconButton>
             </Paper>
@@ -146,7 +149,7 @@ class ImageEditor extends React.Component {
           <Slider
             aria-label='Size'
             defaultValue={50}
-            value={this.props.faceScale}
+            value={this.props.scale}
             valueLabelFormat={(value) => value / 100 * 2}
             valueLabelDisplay='auto'
             marks={[
@@ -198,7 +201,7 @@ export default class App extends React.Component {
       face: '',
       imgs: [],
       imgsEdited: [],
-      selectedImg: null,
+      curImg: null,
       overlays: [],
       isOverlayOn: true,
       faceSize: null,
@@ -210,7 +213,7 @@ export default class App extends React.Component {
       gifFaceScales: [],
       playIntervalId: null,
     };
-    this.selImgRef = React.createRef();
+    this.curImgRef = React.createRef();
   }
 
   componentDidMount() {
@@ -222,12 +225,12 @@ export default class App extends React.Component {
   }
 
   handleKeyDown = (event) => {
-    const selectedImg = this.state.selectedImg;
+    const curImg = this.state.curImg;
     const imgsLength = this.state.imgs.length;
     if (event.key === 'ArrowUp' || event.key === 'ArrowLeft')
-      this.setState({ selectedImg: selectedImg === 0 ? imgsLength - 1 : selectedImg - 1 }, this.scrollIntoView);
+      this.setState({ curImg: curImg === 0 ? imgsLength - 1 : curImg - 1 }, this.scrollIntoView);
     if (event.key === 'ArrowDown' || event.key === 'ArrowRight')
-      this.setState({ selectedImg: (selectedImg + 1) % imgsLength }, this.scrollIntoView);
+      this.setState({ curImg: (curImg + 1) % imgsLength }, this.scrollIntoView);
   }
 
   handlePlayPause = (event) => {
@@ -240,15 +243,15 @@ export default class App extends React.Component {
     else {
       const imgsLength = this.state.imgs.length;
       this.setState({
-        selectedImg: 0,
+        curImg: 0,
         playIntervalId: setInterval(() => {
-            this.setState({ selectedImg: (this.state.selectedImg + 1) % imgsLength }, this.scrollIntoView);
+            this.setState({ curImg: (this.state.curImg + 1) % imgsLength }, this.scrollIntoView);
         }, 100),
       });
     }
   }
 
-  scrollIntoView = () => this.selImgRef.current.scrollIntoView();
+  scrollIntoView = () => this.curImgRef.current.scrollIntoView();
 
   handleFaceUpload(e) {
     e.preventDefault();
@@ -275,8 +278,8 @@ export default class App extends React.Component {
       }, () => this.fetchEditedImg()));
 
       // Select first image if first upload
-      if (this.state.selectedImg == null)
-        this.setState({ selectedImg: 0 });
+      if (this.state.curImg == null)
+        this.setState({ curImg: 0 });
     });
   }
 
@@ -332,7 +335,7 @@ export default class App extends React.Component {
     if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors', 'gifFaceScales'))
       return;
     
-    const imgIndex = this.state.selectedImg;
+    const imgIndex = this.state.curImg;
     const faceSize = this.state.faceSize;
     const gifSize = this.state.gifSize;
 
@@ -395,43 +398,67 @@ export default class App extends React.Component {
     this.fetchEditedImg();
   }
   
-  handleSelImgScaleChange(e, v) {
+  handleCurImgScaleChange(e, v) {
     const newScales = cloneDeep(this.state.gifFaceScales);
-    newScales[this.state.selectedImg] = v;
+    newScales[this.state.curImg] = v;
     this.setState({ gifFaceScales: newScales });
   }
 
-  handleSelImgScaleChangeCommitted(e, v) {
+  handleCurImgScaleChangeCommitted(e, v) {
     const newScales = cloneDeep(this.state.gifFaceScales);
-    newScales[this.state.selectedImg] = v;
+    newScales[this.state.curImg] = v;
     this.setState({ gifFaceScales: newScales });
     this.fetchEditedImg();
   }
 
   handleClickImage(i) {
-    this.setState({ selectedImg: i });
+    this.setState({ curImg: i });
   }
 
-  renderImg(i) {
-    // If image selected, highlight border
+  renderScrollImg(i) {
+    // If current image, highlight border
     // And create ref to scroll to image
     let bgCol, ref;
-    if (this.state.selectedImg === i) {
+    if (this.state.curImg === i) {
       bgCol = 'yellow';
-      ref = this.selImgRef;
+      ref = this.curImgRef;
     }
+    // return (
+    //   <Box
+    //     component='img'
+    //     key={i}
+    //     src={this.state.imgsEdited[i]}
+    //     alt={'image ' + i}
+    //     loading='lazy'
+    //     sx={{ height: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
+    //     onClick={() => this.handleClickImage(i)}
+    //     ref={ref}
+    //   />
+    // );
     
     return (
-      <Box
-        component='img'
-        key={i}
-        src={this.state.imgsEdited[i]}
-        alt={'image ' + i}
-        loading='lazy'
-        sx={{ mr: 1, height: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
-        onClick={() => this.handleClickImage(i)}
-        ref={ref}
-      />
+      <Box sx={{ position: 'relative', display: 'inline-block', mr: 1, height: '100%' }}>
+        <Box
+          component='img'
+          key={i}
+          src={this.state.imgsEdited[i]}
+          alt={'image ' + i}
+          loading='lazy'
+          sx={{ height: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
+          onClick={() => this.handleClickImage(i)}
+          ref={ref}
+        />
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            right: 0,
+            // zIndex: 1,
+          }}
+        >
+          <Checkbox />
+        </Box>
+      </Box>
     );
   }
 
@@ -457,6 +484,7 @@ export default class App extends React.Component {
         src={this.state.face}
         size={this.state.faceSize}
         anchor={this.state.faceAnchor}
+        scale={this.state.faceScale}
         onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, () => this.fetchEditedImg())}
         onScaleChange={this.handleFaceScaleChange.bind(this)}
         onScaleChangeCommitted={this.handleFaceScaleChangeCommitted.bind(this)}
@@ -464,7 +492,7 @@ export default class App extends React.Component {
     }
   }
 
-  renderSelectedImg() {
+  renderCurImg() {
     if (this.isAnyVarsNull('gifSize', 'gifAnchors')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -481,27 +509,28 @@ export default class App extends React.Component {
       );
     }
     else {
-      const selectedImg = this.state.selectedImg;
+      const curImg = this.state.curImg;
       const overlayButton = this.renderOverlayButton();
       return (
         <>
           {overlayButton}
           <ImageEditor
-            imageName='selected'
-            src={this.state.imgsEdited[selectedImg]}
-            overlay={this.state.overlays[selectedImg]}
+            imageName='current'
+            src={this.state.imgsEdited[curImg]}
+            overlay={this.state.overlays[curImg]}
             isOverlayOn={this.state.isOverlayOn}
             size={this.state.gifSize}
-            anchor={this.state.gifAnchors[selectedImg]}
+            anchor={this.state.gifAnchors[curImg]}
+            scale={this.state.gifFaceScales[curImg]}
             onAnchorChange={(anchor) => {
               let newGifAnchors = cloneDeep(this.state.gifAnchors);
-              newGifAnchors[selectedImg] = anchor;
+              newGifAnchors[curImg] = anchor;
               this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg());
             }}
-            onScaleChange={this.handleSelImgScaleChange.bind(this)}
-            onScaleChangeCommitted={this.handleSelImgScaleChangeCommitted.bind(this)}
+            onScaleChange={this.handleCurImgScaleChange.bind(this)}
+            onScaleChangeCommitted={this.handleCurImgScaleChangeCommitted.bind(this)}
             onOverlayChange={this.handleIsOverlayOn.bind(this)}
-            key={selectedImg} // jank?
+            key={curImg} // jank?
           />
         </>
       );
@@ -527,7 +556,7 @@ export default class App extends React.Component {
   renderScroll() {
     if (this.state.imgsEdited.length !== 0) {
       return <>
-        <Stack sx={{ position: 'absolute' }} spacing={2} direction="row" alignItems="center">
+        <Stack sx={{ position: 'absolute', zIndex: 2 }} spacing={2} direction="row" alignItems="center">
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
             <IconButton
               component="label"
@@ -550,7 +579,7 @@ export default class App extends React.Component {
           </Paper>
         </Stack>
         <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
-          {this.state.imgsEdited.map((image, index) => (this.renderImg(index)))}
+          {this.state.imgsEdited.map((image, index) => (this.renderScrollImg(index)))}
         </Box>
       </>
     }
@@ -558,7 +587,7 @@ export default class App extends React.Component {
 
   render() {
     const face = this.renderFace();
-    const selectedImg = this.renderSelectedImg();
+    const curImg = this.renderCurImg();
     const scroll = this.renderScroll();
     return (
       <div className="App">
@@ -571,15 +600,13 @@ export default class App extends React.Component {
           </Grid>
           <Grid item xs={6} sx={{ height: '70%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-              {selectedImg}
+              {curImg}
             </Paper>
           </Grid>
-          <Grid item xs={12} sx={{ height: '30%' }}>
-            <Box sx={{ pt: 2, height: '100%' }}>
-              <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
-                {scroll}
-              </Paper>
-            </Box>
+          <Grid item xs={12} sx={{ height: 'calc(30% - 16px)', mt: 2 }}>
+            <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
+              {scroll}
+            </Paper>
           </Grid>
         </Grid>
       </div>
