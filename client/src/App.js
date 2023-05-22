@@ -204,7 +204,7 @@ export default class App extends React.Component {
       curImg: null, // current image the user is editing
       overlays: [], // overlays to help user edit easily
       isOverlayOn: true,
-      selected: [], // selected images to apply transforms to multiple frames at once
+      checked: [], // checked images to apply transforms to multiple frames at once
       faceSize: null, // face size in pixels
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
@@ -269,7 +269,7 @@ export default class App extends React.Component {
   handleImagesUpload = async (e) => {
     e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
-      this.setState({ imgs: urls, imgsEdited: urls });
+      this.setState({ imgs: urls, imgsEdited: urls, checked: Array(urls.length).fill(false) });
 
       // Get gif dimensions
       this.getImgSize(urls[0], (size) => this.setState({
@@ -332,11 +332,12 @@ export default class App extends React.Component {
     Promise.all(readers).then(callback);
   }
 
-  fetchEditedImg = async () => {
+  fetchEditedImg = async (imgIndex) => {
     if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors', 'gifFaceScales'))
       return;
     
-    const imgIndex = this.state.curImg;
+    if (imgIndex == null)
+      imgIndex = this.state.curImg;
     const faceSize = this.state.faceSize;
     const gifSize = this.state.gifSize;
 
@@ -413,6 +414,20 @@ export default class App extends React.Component {
   handleClickImage = (i) => {
     this.setState({ curImg: i });
   }
+  
+  handleCheck = (i, e) => {
+    const newChecked = cloneDeep(this.state.checked);
+    newChecked[i] = e.target.checked
+    this.setState({ checked: newChecked });
+  }
+
+  handleCheckAll = () => {
+    this.setState({ checked: Array(this.state.imgs.length).fill(true) });
+  }
+
+  handleUncheckAll = () => {
+    this.setState({ checked: Array(this.state.imgs.length).fill(false) });
+  }
 
   renderScrollImg(i) {
     // If current image, highlight border
@@ -441,7 +456,7 @@ export default class App extends React.Component {
             right: 0,
           }}
         >
-          <Checkbox onChange={this.handleCheck} />
+          <Checkbox checked={this.state.checked[i]} onChange={(e) => this.handleCheck(i, e)} />
         </Box>
       </Box>
     );
@@ -561,6 +576,16 @@ export default class App extends React.Component {
             >
               <DownloadIcon />
             </IconButton>
+          </Paper>
+          <Paper sx={{ borderRadius: 100 }} elevation={4}>
+            <Button
+              component="label"
+              variant="outlined"
+              onClick={this.handleCheckAll}
+              sx={{ borderRadius: 100 }}
+            >
+              Select All
+            </Button>
           </Paper>
         </Stack>
         <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
