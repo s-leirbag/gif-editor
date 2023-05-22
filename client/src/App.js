@@ -148,15 +148,17 @@ class ImageEditor extends React.Component {
           <Typography variant='h6' component='h6'>Size</Typography>
           <Slider
             aria-label='Size'
-            defaultValue={50}
+            defaultValue={1}
             value={this.props.scale}
-            valueLabelFormat={(value) => value / 100 * 2}
             valueLabelDisplay='auto'
             marks={[
               { value: 0, label: '0' },
-              { value: 50, label: '1' },
-              { value: 100, label: '2' },
+              { value: 1, label: '1' },
+              { value: 2, label: '2' },
             ]}
+            step={0.05}
+            min={0}
+            max={2}
             onChange={this.props.onScaleChange}
             onChangeCommitted={this.props.onScaleChangeCommitted}
           />
@@ -210,7 +212,7 @@ export default class App extends React.Component {
       gifSize: null, // gif images size in pixels
       faceAnchor: null, // anchor position on face in pixels
       gifAnchors: [], // anchor position on gif images in pixels
-      faceScale: 50, // slider value for face scale
+      faceScale: 1, // slider value for face scale
       gifFaceScales: [], // compounding scale for face in each gif image
       playIntervalId: null, // interval for playing gif
     };
@@ -275,7 +277,7 @@ export default class App extends React.Component {
       this.getImgSize(urls[0], (size) => this.setState({
         gifSize: size,
         gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
-        gifFaceScales: Array(urls.length).fill(50),
+        gifFaceScales: Array(urls.length).fill(1),
       }, this.fetchEditedImg));
 
       // Select first image if first upload
@@ -341,7 +343,7 @@ export default class App extends React.Component {
     const faceSize = this.state.faceSize;
     const gifSize = this.state.gifSize;
 
-    const scale = this.state.faceScale / 100 * 2 * this.state.gifFaceScales[imgIndex] / 100 * 2;
+    const scale = this.state.faceScale * this.state.gifFaceScales[imgIndex];
     let faceScaleSize = {};
     if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
       faceScaleSize.width = gifSize.width * scale;
