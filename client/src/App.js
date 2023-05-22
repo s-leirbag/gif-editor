@@ -52,7 +52,7 @@ class ImageEditor extends React.Component {
     };
   }
 
-  handleDragStop(e, data) {
+  handleDragStop = (e, data) => {
     const newAnchor = this.screenToActual(data);
     this.props.onAnchorChange(newAnchor);
     this.setState({anchor: newAnchor});
@@ -108,7 +108,7 @@ class ImageEditor extends React.Component {
             key='anchor'
             position={this.actualToScreen(this.state.anchor)}
             bounds={{left: 0, top: 0, right: screenSize.width, bottom: screenSize.height}}
-            onStop={(e, data) => this.handleDragStop(e, data)}
+            onStop={this.handleDragStop}
           >
             <Paper
               className='handle'
@@ -144,7 +144,7 @@ class ImageEditor extends React.Component {
       }
 
       const scaleSlider = (
-        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems="center">
+        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems='center'>
           <Typography variant='h6' component='h6'>Size</Typography>
           <Slider
             aria-label='Size'
@@ -168,9 +168,9 @@ class ImageEditor extends React.Component {
             position: 'absolute',
             p: 1,
             borderRadius: 100,
+            alignItems: 'center',
           }}
           elevation={4}
-          alignItems="center"
         >
           <Stack spacing={0.5} direction="row" alignItems="center">
             <Typography variant='h6' component='h6'>Overlay</Typography>
@@ -204,6 +204,7 @@ export default class App extends React.Component {
       curImg: null, // current image the user is editing
       overlays: [], // overlays to help user edit easily
       isOverlayOn: true,
+      selected: [], // selected images to apply transforms to multiple frames at once
       faceSize: null, // face size in pixels
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
@@ -253,7 +254,7 @@ export default class App extends React.Component {
 
   scrollIntoView = () => this.curImgRef.current.scrollIntoView();
 
-  handleFaceUpload(e) {
+  handleFaceUpload = (e) => {
     e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
       const img = urls[0];
@@ -261,11 +262,11 @@ export default class App extends React.Component {
       this.getImgSize(img, (size) => this.setState({
         faceSize: size,
         faceAnchor: { x: size.width / 2, y: size.height / 2 },
-      }, () => this.fetchEditedImg()));
+      }, this.fetchEditedImg));
     });
   }
 
-  async handleImagesUpload(e) {
+  handleImagesUpload = async (e) => {
     e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
       this.setState({ imgs: urls, imgsEdited: urls });
@@ -275,7 +276,7 @@ export default class App extends React.Component {
         gifSize: size,
         gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
         gifFaceScales: Array(urls.length).fill(50),
-      }, () => this.fetchEditedImg()));
+      }, this.fetchEditedImg));
 
       // Select first image if first upload
       if (this.state.curImg == null)
@@ -283,19 +284,19 @@ export default class App extends React.Component {
     });
   }
 
-  handleOverlaysUpload(e) {
+  handleOverlaysUpload = (e) => {
     e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
       this.setState({ overlays: urls });
-      this.fetchEditedImg()
+      this.fetchEditedImg();
     });
   }
 
-  handleIsOverlayOn(e, c) {
+  handleIsOverlayOn = (e, c) => {
     this.setState({ isOverlayOn: c });
   }
 
-  handleDownload(e) {
+  handleDownload = (e) => {
     e.preventDefault();
     const zip = new JSZip();
     const imgsEdited = this.state.imgsEdited;
@@ -331,7 +332,7 @@ export default class App extends React.Component {
     Promise.all(readers).then(callback);
   }
 
-  async fetchEditedImg() {
+  fetchEditedImg = async () => {
     if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors', 'gifFaceScales'))
       return;
     
@@ -389,29 +390,27 @@ export default class App extends React.Component {
     return false;
   }
   
-  handleFaceScaleChange(e, v) {
+  handleFaceScaleChange = (e, v) => {
     this.setState({ faceScale: v });
   }
 
-  handleFaceScaleChangeCommitted(e, v) {
-    this.setState({ faceScale: v });
-    this.fetchEditedImg();
+  handleFaceScaleChangeCommitted = (e, v) => {
+    this.setState({ faceScale: v }, this.fetchEditedImg);
   }
   
-  handleCurImgScaleChange(e, v) {
+  handleCurImgScaleChange = (e, v) => {
     const newScales = cloneDeep(this.state.gifFaceScales);
     newScales[this.state.curImg] = v;
     this.setState({ gifFaceScales: newScales });
   }
 
-  handleCurImgScaleChangeCommitted(e, v) {
+  handleCurImgScaleChangeCommitted = (e, v) => {
     const newScales = cloneDeep(this.state.gifFaceScales);
     newScales[this.state.curImg] = v;
-    this.setState({ gifFaceScales: newScales });
-    this.fetchEditedImg();
+    this.setState({ gifFaceScales: newScales }, this.fetchEditedImg);
   }
 
-  handleClickImage(i) {
+  handleClickImage = (i) => {
     this.setState({ curImg: i });
   }
 
@@ -423,24 +422,11 @@ export default class App extends React.Component {
       bgCol = 'yellow';
       ref = this.curImgRef;
     }
-    // return (
-    //   <Box
-    //     component='img'
-    //     key={i}
-    //     src={this.state.imgsEdited[i]}
-    //     alt={'image ' + i}
-    //     loading='lazy'
-    //     sx={{ height: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
-    //     onClick={() => this.handleClickImage(i)}
-    //     ref={ref}
-    //   />
-    // );
     
     return (
-      <Box sx={{ position: 'relative', display: 'inline-block', mr: 1, height: '100%' }}>
+      <Box sx={{ position: 'relative', display: 'inline-block', mr: 1, height: '100%' }} key={i}>
         <Box
           component='img'
-          key={i}
           src={this.state.imgsEdited[i]}
           alt={'image ' + i}
           loading='lazy'
@@ -453,10 +439,9 @@ export default class App extends React.Component {
             position: 'absolute',
             top: 0,
             right: 0,
-            // zIndex: 1,
           }}
         >
-          <Checkbox />
+          <Checkbox onChange={this.handleCheck} />
         </Box>
       </Box>
     );
@@ -473,7 +458,7 @@ export default class App extends React.Component {
             sx={{ marginRight: "1rem" }}
           >
             <Typography variant="h6" component='h6'>Upload Face</Typography>
-            <input type="file" accept="image/*" hidden onChange={(e) => this.handleFaceUpload(e)} />
+            <input type="file" accept="image/*" hidden onChange={this.handleFaceUpload} />
           </Button>
         </Box>
       );
@@ -485,9 +470,9 @@ export default class App extends React.Component {
         size={this.state.faceSize}
         anchor={this.state.faceAnchor}
         scale={this.state.faceScale}
-        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, () => this.fetchEditedImg())}
-        onScaleChange={this.handleFaceScaleChange.bind(this)}
-        onScaleChangeCommitted={this.handleFaceScaleChangeCommitted.bind(this)}
+        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, this.fetchEditedImg)}
+        onScaleChange={this.handleFaceScaleChange}
+        onScaleChangeCommitted={this.handleFaceScaleChangeCommitted}
       />;
     }
   }
@@ -503,7 +488,7 @@ export default class App extends React.Component {
             sx={{ marginRight: "1rem" }}
           >
             <Typography variant="h6">Upload Images</Typography>
-            <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleImagesUpload(e)} />
+            <input type="file" accept="image/*" multiple hidden onChange={this.handleImagesUpload} />
           </Button>
         </Box>
       );
@@ -525,11 +510,11 @@ export default class App extends React.Component {
             onAnchorChange={(anchor) => {
               let newGifAnchors = cloneDeep(this.state.gifAnchors);
               newGifAnchors[curImg] = anchor;
-              this.setState({ gifAnchors: newGifAnchors }, () => this.fetchEditedImg());
+              this.setState({ gifAnchors: newGifAnchors }, this.fetchEditedImg);
             }}
-            onScaleChange={this.handleCurImgScaleChange.bind(this)}
-            onScaleChangeCommitted={this.handleCurImgScaleChangeCommitted.bind(this)}
-            onOverlayChange={this.handleIsOverlayOn.bind(this)}
+            onScaleChange={this.handleCurImgScaleChange}
+            onScaleChangeCommitted={this.handleCurImgScaleChangeCommitted}
+            onOverlayChange={this.handleIsOverlayOn}
             key={curImg} // jank?
           />
         </>
@@ -547,7 +532,7 @@ export default class App extends React.Component {
           sx={{ borderRadius: 100 }}
         >
           <Typography variant="h6">Upload Overlays</Typography>
-          <input type="file" accept="image/*" multiple hidden onChange={(e) => this.handleOverlaysUpload(e)} />
+          <input type="file" accept="image/*" multiple hidden onChange={this.handleOverlaysUpload} />
         </Button>
       </Paper>
     );
@@ -561,7 +546,7 @@ export default class App extends React.Component {
             <IconButton
               component="label"
               variant="outlined"
-              onClick={(e) => this.handlePlayPause(e)}
+              onClick={this.handlePlayPause}
               sx={{ borderRadius: 100 }}
             >
               {this.state.playIntervalId ? <PauseIcon /> : <PlayArrowIcon />}
@@ -571,7 +556,7 @@ export default class App extends React.Component {
             <IconButton
               component="label"
               variant="outlined"
-              onClick={(e) => this.handleDownload(e)}
+              onClick={this.handleDownload}
               sx={{ borderRadius: 100 }}
             >
               <DownloadIcon />
