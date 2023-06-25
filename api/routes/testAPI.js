@@ -13,6 +13,7 @@ const cpUpload = upload.fields([
   { name: 'faceScaleSize', maxCount: 1 },
   { name: 'faceCenter', maxCount: 1 },
   { name: 'facePos', maxCount: 1 },
+  { name: 'faceRot', maxCount: 1 },
 ])
 router.post("/", cpUpload, async (req, res) => {
   const faceBase64 = req.body.face.split(',')[1];
@@ -20,10 +21,12 @@ router.post("/", cpUpload, async (req, res) => {
   const faceSize = JSON.parse(req.body.faceSize);
   const gifSize = JSON.parse(req.body.gifSize);
   const faceScaleSize = objValsToInts(JSON.parse(req.body.faceScaleSize));
+  const center = objValsToInts(getCenter(faceScaleSize));
   const ratio = faceScaleSize.width / faceSize.width;
   let faceCenter = JSON.parse(req.body.faceCenter);
   faceCenter = objValsToInts({x: faceCenter.x * ratio, y: faceCenter.y * ratio});
   const facePos = objValsToInts(JSON.parse(req.body.facePos));
+  const faceRot = objValsToInts(JSON.parse(req.body.faceRot));
   let face = Buffer.from(faceBase64, 'base64');
   const gifImg = Buffer.from(imgBase64, 'base64');
 
@@ -33,28 +36,24 @@ router.post("/", cpUpload, async (req, res) => {
   }
 
   face = await resize(face, faceScaleSize.width, faceScaleSize.height, sharp.kernel.nearest);
-  face = await translate(face, facePos.x - faceCenter.x, facePos.y - faceCenter.y);
+
+  // Center and rotate
+  face = await translate(face, center.x - faceCenter.x, center.y - faceCenter.y);
+  face = await rotate(face, faceRot);
+
+  // Move to face position
+  const rotCenter = getCenter(await getSize(face));
+  face = await translate(face,
+    parseInt(facePos.x - rotCenter.x),
+    parseInt(facePos.y - rotCenter.y)
+  );
+
+  // Merge images
   face = await resizeCanvas(face, gifSize.width, gifSize.height);
   face = await sharp(face).composite([{ input: gifImg }]).toBuffer();
   
-  const base64 = 'data:image/png;base64,' + face.toString('base64');
-  res.send(base64);
+  res.send(bufferToBase64(face));
 });
-
-// router.post("/", upload.array("images", 50), async (req, res) => {
-//   let images = []
-//   for (const file of req.files) {
-//     const buffer = file.buffer;
-//     const newImage = await sharp(buffer).greyscale().toBuffer();
-//     const base64 = 'data:image/png;base64,' + newImage.toString('base64');
-//     const base64noHeader = base64.split(',')[1];
-//     const buffer2 = Buffer.from(base64noHeader, 'base64');
-//     const newImage2 = await sharp(buffer2).rotate(90).toBuffer();
-//     const base642 = 'data:image/png;base64,' + newImage2.toString('base64');
-//     images.push(base642);
-//   }
-//   res.send(images)
-// });
 
 objValsToInts = (obj) => {
   for (const key in obj)
@@ -62,7 +61,13 @@ objValsToInts = (obj) => {
   return obj;
 }
 
+getCenter = ({ width, height }) => {
+  return { x: width / 2, y: height / 2 };
+}
+
 transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+
+bufferToBase64 = (buffer) => 'data:image/png;base64,' + buffer.toString('base64');
 
 createPng = async (width, height) => {
   return await sharp({
@@ -81,11 +86,15 @@ getSize = async (img) => {
   const height = metadata.height;
   return { width, height };
 }
-  
+
 resize = async (img, width, height, sampleMethod) => {
   return await sharp(img).resize(width, height, {
     kernel: sampleMethod,
   }).toBuffer();
+}
+
+rotate = async (img, deg) => {
+  return await sharp(img).rotate(deg, { background: transparent }).toBuffer();
 }
 
 translate = async (img, x, y) => {

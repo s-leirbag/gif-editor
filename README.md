@@ -8,7 +8,6 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 - UI overhaul
 - Apply transforms to multiple frames at once
-- Rotation
 - Face centering
 - Disable editing while playing gif
 - ...

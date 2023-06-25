@@ -195,6 +195,7 @@ export default class App extends React.Component {
     data.append('faceScaleSize', JSON.stringify(faceScaleSize));
     data.append('faceCenter', JSON.stringify(this.state.faceCenter));
     data.append('facePos', JSON.stringify(this.state.gifPositions[imgIndex]));
+    data.append('faceRot', JSON.stringify(this.state.gifRotations[imgIndex]));
     const response = await fetch('/testAPI', {
       method: "POST",
       body: data,
