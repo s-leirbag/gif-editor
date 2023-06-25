@@ -1,8 +1,9 @@
 import React from 'react';
 import './App.css';
-import Draggable from 'react-draggable';
 import JSZip from 'jszip';
 import FileSaver from 'file-saver';
+
+import ImageEditor from './Components/ImageEditor.jsx';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -11,12 +12,9 @@ import Checkbox from '@mui/material/Checkbox';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
-import Slider from '@mui/material/Slider';
 import Stack from '@mui/material/Stack';
-import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 
-import AnchorIcon from '@mui/icons-material/Anchor';
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
@@ -24,177 +22,6 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { cloneDeep } from 'lodash';
 // import { clone, sample, isEmpty } from 'lodash';
-
-class ImageEditor extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      screenSize: null,
-      screenPos: null,
-      // iconSize: { width: 0, height: 0 },
-      anchor: props.anchor,
-    };
-  }
-
-  actualToScreen({x, y}) {
-    const screenSize = this.state.screenSize;
-    return {
-      x: x * screenSize.width / this.props.size.width,
-      y: y * screenSize.height / this.props.size.height,
-    };
-  }
-
-  screenToActual({x, y}) {
-    const screenSize = this.state.screenSize;
-    return {
-      x: x * this.props.size.width / screenSize.width,
-      y: y * this.props.size.height / screenSize.height,
-    };
-  }
-
-  handleDragStop = (e, data) => {
-    const newAnchor = this.screenToActual(data);
-    this.props.onAnchorChange(newAnchor);
-    this.setState({anchor: newAnchor});
-  }
-
-  render() {
-    if (!this.props.src) {
-      return '';
-    }
-    else {
-      const imageSection = [<img
-        src={this.props.src}
-        alt={this.props.imageName}
-        loading="lazy"
-        key='image'
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-        }}
-        onLoad={({target:img}) => {
-          const height = img.clientHeight;
-          const width = img.clientWidth;
-          const x = img.getBoundingClientRect().left;
-          const y = img.getBoundingClientRect().top;
-          this.setState({
-            screenSize: { width, height },
-            screenPos: { x, y },
-          });
-        }}
-      />];
-
-      const screenSize = this.state.screenSize;
-      const screenPos = this.state.screenPos;
-      // const iconSize = this.state.iconSize;
-      if (screenSize != null && screenSize != null) {
-        if (this.props.isOverlayOn && this.props.overlay) {
-          imageSection.push(<img
-            src={this.props.overlay}
-            alt={this.props.imageName}
-            loading="lazy"
-            key='overlay'
-            style={{
-              width: screenSize.width, height: screenSize.height, objectFit: 'contain',
-              position: 'absolute', top: screenPos.y, left: screenPos.x,
-              opacity: 0.3,
-            }}
-          />);
-        }
-        imageSection.push(
-          <Draggable
-            handle=".handle"
-            key='anchor'
-            position={this.actualToScreen(this.state.anchor)}
-            bounds={{left: 0, top: 0, right: screenSize.width, bottom: screenSize.height}}
-            onStop={this.handleDragStop}
-          >
-            <Paper
-              className='handle'
-              sx={{
-                position: 'absolute',
-                // top: screenPos.y - iconSize.height / 2,
-                // left: screenPos.x - iconSize.width / 2,
-                top: screenPos.y,
-                left: screenPos.x,
-                transform: 'translate(-50%, -50%)',
-                borderRadius: 100,
-                opacity: 0.6,
-              }}
-              elevation={4}
-            >
-              <IconButton
-                component="label"
-                variant="outlined"
-                sx={{ borderRadius: 100 }}
-              >
-                <AnchorIcon
-                  key='anchor'
-                  // onLoad={({target:el}) => {
-                  //   const height = el.clientHeight;
-                  //   const width = el.clientWidth;
-                  //   this.setState({ iconSize: { width, height } });
-                  // }}
-                />
-              </IconButton>
-            </Paper>
-          </Draggable>
-        );
-      }
-
-      const scaleSlider = (
-        <Stack spacing={2} direction="row" sx={{ mb: 1 }} alignItems='center'>
-          <Typography variant='h6' component='h6'>Size</Typography>
-          <Slider
-            aria-label='Size'
-            defaultValue={1}
-            value={this.props.scale}
-            valueLabelDisplay='auto'
-            marks={[
-              { value: 0, label: '0' },
-              { value: 1, label: '1' },
-              { value: 2, label: '2' },
-            ]}
-            step={0.05}
-            min={0}
-            max={2}
-            onChange={this.props.onScaleChange}
-            onChangeCommitted={this.props.onScaleChangeCommitted}
-          />
-        </Stack>
-      );
-      const overlaySwitch = this.props.overlay ? (
-        <Paper
-          sx={{
-            position: 'absolute',
-            p: 1,
-            borderRadius: 100,
-            alignItems: 'center',
-          }}
-          elevation={4}
-        >
-          <Stack spacing={0.5} direction="row" alignItems="center">
-            <Typography variant='h6' component='h6'>Overlay</Typography>
-            <Switch
-              checked={this.props.isOverlayOn}
-              onChange={this.props.onOverlayChange}
-            />
-          </Stack>
-        </Paper>
-      ) : '';
-      return (
-        <Box sx={{ height: 'calc(100% - 53px)', display: 'flex', flexDirection: 'column' }}>
-          <Box sx={{ height: '100%', borderColor: 'black', borderWidth: 2, borderStyle: 'solid' }}>
-            {imageSection}
-          </Box>
-          {scaleSlider}
-          {overlaySwitch}
-        </Box>
-      );
-    }
-  }
-}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -210,10 +37,11 @@ export default class App extends React.Component {
       faceSize: null, // face size in pixels
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
-      faceAnchor: null, // anchor position on face in pixels
-      gifAnchors: [], // anchor position on gif images in pixels
+      faceCenter: null, // center position on face in pixels
+      gifPositions: [], // position of face on gif images in pixels
       faceScale: 1, // slider value for face scale
       gifFaceScales: [], // compounding scale for face in each gif image
+      gifRotations: [], // rotation of face in each gif image
       playIntervalId: null, // interval for playing gif
     };
     this.curImgRef = React.createRef();
@@ -228,6 +56,9 @@ export default class App extends React.Component {
   }
 
   handleKeyDown = (event) => {
+    if (this.state.imgs.length === 0)
+      return;
+
     const curImg = this.state.curImg;
     const imgsLength = this.state.imgs.length;
     if (event.key === 'ArrowUp' || event.key === 'ArrowLeft')
@@ -263,7 +94,7 @@ export default class App extends React.Component {
       this.setState({ face: img });
       this.getImgSize(img, (size) => this.setState({
         faceSize: size,
-        faceAnchor: { x: size.width / 2, y: size.height / 2 },
+        faceCenter: { x: size.width / 2, y: size.height / 2 },
       }, this.fetchEditedImg));
     });
   }
@@ -276,8 +107,9 @@ export default class App extends React.Component {
       // Get gif dimensions
       this.getImgSize(urls[0], (size) => this.setState({
         gifSize: size,
-        gifAnchors: Array(urls.length).fill({ x: size.width / 2, y: size.height / 2 }),
         gifFaceScales: Array(urls.length).fill(1),
+        gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
+        gifRotations: Array(urls.length).fill(0),
       }, this.fetchEditedImg));
 
       // Select first image if first upload
@@ -335,7 +167,7 @@ export default class App extends React.Component {
   }
 
   fetchEditedImg = async (imgIndex) => {
-    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceAnchor', 'gifAnchors', 'gifFaceScales'))
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifPositions', 'gifFaceScales'))
       return;
     
     if (imgIndex == null)
@@ -361,8 +193,8 @@ export default class App extends React.Component {
     data.append('faceSize', JSON.stringify(faceSize));
     data.append('gifSize', JSON.stringify(gifSize));
     data.append('faceScaleSize', JSON.stringify(faceScaleSize));
-    data.append('faceAnchor', JSON.stringify(this.state.faceAnchor));
-    data.append('imageAnchor', JSON.stringify(this.state.gifAnchors[imgIndex]));
+    data.append('faceCenter', JSON.stringify(this.state.faceCenter));
+    data.append('facePos', JSON.stringify(this.state.gifPositions[imgIndex]));
     const response = await fetch('/testAPI', {
       method: "POST",
       body: data,
@@ -392,25 +224,9 @@ export default class App extends React.Component {
     }
     return false;
   }
-  
+
   handleFaceScaleChange = (e, v) => {
-    this.setState({ faceScale: v });
-  }
-
-  handleFaceScaleChangeCommitted = (e, v) => {
     this.setState({ faceScale: v }, this.fetchEditedImg);
-  }
-  
-  handleCurImgScaleChange = (e, v) => {
-    const newScales = cloneDeep(this.state.gifFaceScales);
-    newScales[this.state.curImg] = v;
-    this.setState({ gifFaceScales: newScales });
-  }
-
-  handleCurImgScaleChangeCommitted = (e, v) => {
-    const newScales = cloneDeep(this.state.gifFaceScales);
-    newScales[this.state.curImg] = v;
-    this.setState({ gifFaceScales: newScales }, this.fetchEditedImg);
   }
 
   handleClickImage = (i) => {
@@ -465,7 +281,7 @@ export default class App extends React.Component {
   }
 
   renderFace() {
-    if (this.isAnyVarsNull('faceSize', 'faceAnchor')) {
+    if (this.isAnyVarsNull('faceSize', 'faceCenter')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <Button
@@ -481,21 +297,21 @@ export default class App extends React.Component {
       );
     }
     else {
-      return <ImageEditor
-        imageName='face'
-        src={this.state.face}
-        size={this.state.faceSize}
-        anchor={this.state.faceAnchor}
-        scale={this.state.faceScale}
-        onAnchorChange={(anchor) => this.setState({ faceAnchor: anchor }, this.fetchEditedImg)}
-        onScaleChange={this.handleFaceScaleChange}
-        onScaleChangeCommitted={this.handleFaceScaleChangeCommitted}
-      />;
+      // return <ImageEditor
+      //   name='face'
+      //   src={this.state.face}
+      //   size={this.state.faceSize}
+      //   pos={this.state.faceCenter}
+      //   scale={this.state.faceScale}
+      //   onPosChange={(pos) => this.setState({ faceCenter: pos }, this.fetchEditedImg)}
+      //   onScaleChange={this.handleFaceScaleChange}
+      //   onRotateChange
+      // />;
     }
   }
 
   renderCurImg() {
-    if (this.isAnyVarsNull('gifSize', 'gifAnchors')) {
+    if (this.isAnyVarsNull('gifSize', 'gifPositions')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <Button
@@ -517,21 +333,33 @@ export default class App extends React.Component {
         <>
           {overlayButton}
           <ImageEditor
-            imageName='current'
+            name='current'
             src={this.state.imgsEdited[curImg]}
             overlay={this.state.overlays[curImg]}
             isOverlayOn={this.state.isOverlayOn}
+            faceScaleSize={this.state.faceScaleSize}
             size={this.state.gifSize}
-            anchor={this.state.gifAnchors[curImg]}
+            pos={this.state.gifPositions[curImg]}
             scale={this.state.gifFaceScales[curImg]}
-            onAnchorChange={(anchor) => {
-              let newGifAnchors = cloneDeep(this.state.gifAnchors);
-              newGifAnchors[curImg] = anchor;
-              this.setState({ gifAnchors: newGifAnchors }, this.fetchEditedImg);
+            rotation={this.state.gifRotations[curImg]}
+            onPosChange={(pos) => {
+              let newGifPositions = cloneDeep(this.state.gifPositions);
+              newGifPositions[curImg] = pos;
+              this.setState({ gifPositions: newGifPositions }, this.fetchEditedImg);
             }}
-            onScaleChange={this.handleCurImgScaleChange}
-            onScaleChangeCommitted={this.handleCurImgScaleChangeCommitted}
+            onScaleChange={(scale) => {
+              // console.log(scale);
+              const newScales = cloneDeep(this.state.gifFaceScales);
+              newScales[curImg] = scale;
+              this.setState({ gifFaceScales: newScales }, this.fetchEditedImg);
+            }}
             onOverlayChange={this.handleIsOverlayOn}
+            onRotateChange={(deg) => {
+              // console.log(deg);
+              const newRotations = cloneDeep(this.state.gifRotations);
+              newRotations[curImg] = deg;
+              this.setState({ gifRotations: newRotations }, this.fetchEditedImg);
+            }}
             key={curImg} // jank?
           />
         </>

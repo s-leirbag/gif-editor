@@ -6,10 +6,10 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
+- UI overhaul
 - Apply transforms to multiple frames at once
 - Rotation
-- Center anchor/add dot for exact coordinate
-- Change slider values to be 0 to 2 with small steps
+- Face centering
 - Disable editing while playing gif
 - ...
 

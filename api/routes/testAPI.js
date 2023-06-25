@@ -11,8 +11,8 @@ const cpUpload = upload.fields([
   { name: 'faceSize', maxCount: 1 },
   { name: 'gifSize', maxCount: 1 },
   { name: 'faceScaleSize', maxCount: 1 },
-  { name: 'faceAnchor', maxCount: 1 },
-  { name: 'imageAnchor', maxCount: 1 },
+  { name: 'faceCenter', maxCount: 1 },
+  { name: 'facePos', maxCount: 1 },
 ])
 router.post("/", cpUpload, async (req, res) => {
   const faceBase64 = req.body.face.split(',')[1];
@@ -21,9 +21,9 @@ router.post("/", cpUpload, async (req, res) => {
   const gifSize = JSON.parse(req.body.gifSize);
   const faceScaleSize = objValsToInts(JSON.parse(req.body.faceScaleSize));
   const ratio = faceScaleSize.width / faceSize.width;
-  let faceAnchor = JSON.parse(req.body.faceAnchor);
-  faceAnchor = objValsToInts({x: faceAnchor.x * ratio, y: faceAnchor.y * ratio});
-  const imgAnchor = objValsToInts(JSON.parse(req.body.imageAnchor));
+  let faceCenter = JSON.parse(req.body.faceCenter);
+  faceCenter = objValsToInts({x: faceCenter.x * ratio, y: faceCenter.y * ratio});
+  const facePos = objValsToInts(JSON.parse(req.body.facePos));
   let face = Buffer.from(faceBase64, 'base64');
   const gifImg = Buffer.from(imgBase64, 'base64');
 
@@ -31,9 +31,9 @@ router.post("/", cpUpload, async (req, res) => {
     res.send(req.body.image);
     return;
   }
-  
-  face = await sharp(face).resize(faceScaleSize.width, faceScaleSize.height).toBuffer();
-  face = await translate(face, imgAnchor.x - faceAnchor.x, imgAnchor.y - faceAnchor.y);
+
+  face = await resize(face, faceScaleSize.width, faceScaleSize.height, sharp.kernel.nearest);
+  face = await translate(face, facePos.x - faceCenter.x, facePos.y - faceCenter.y);
   face = await resizeCanvas(face, gifSize.width, gifSize.height);
   face = await sharp(face).composite([{ input: gifImg }]).toBuffer();
   
@@ -62,16 +62,34 @@ objValsToInts = (obj) => {
   return obj;
 }
 
+transparent = { r: 0, g: 0, b: 0, alpha: 0 };
+
+createPng = async (width, height) => {
+  return await sharp({
+    create: {
+      width,
+      height,
+      channels: 4,
+      background: transparent,
+    }
+  }).png().toBuffer();
+}
+
 getSize = async (img) => {
   const metadata = await sharp(img).metadata();
   const width = metadata.width;
   const height = metadata.height;
   return { width, height };
 }
+  
+resize = async (img, width, height, sampleMethod) => {
+  return await sharp(img).resize(width, height, {
+    kernel: sampleMethod,
+  }).toBuffer();
+}
 
 translate = async (img, x, y) => {
   const { width, height } = await getSize(img);
-  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   const extract = {
     left: x < 0 ? -x : 0,
     top: y < 0 ? -y : 0,
@@ -86,6 +104,8 @@ translate = async (img, x, y) => {
     bottom: y < 0 ? -y : 0,
     background: transparent,
   }
+  if (extract.width <= 0 || extract.height <= 0)
+    return createPng(width, height);
   return await sharp(img).extract(extract).extend(extend).toBuffer();
 }
 
@@ -95,7 +115,6 @@ resizeCanvas = async (img, newWidth, newHeight) => {
   const height = metadata.height;
   const widthLarger = newWidth > width;
   const heightLarger = newHeight > height;
-  const transparent = { r: 0, g: 0, b: 0, alpha: 0 };
   const extract = {
     left: 0,
     top: 0,
