@@ -3,6 +3,7 @@ import './App.css';
 import JSZip from 'jszip';
 import FileSaver from 'file-saver';
 
+import FaceCenterer from './Components/FaceCenterer.jsx';
 import ImageEditor from './Components/ImageEditor.jsx';
 
 import CssBaseline from '@mui/material/CssBaseline';
@@ -298,16 +299,14 @@ export default class App extends React.Component {
       );
     }
     else {
-      // return <ImageEditor
-      //   name='face'
-      //   src={this.state.face}
-      //   size={this.state.faceSize}
-      //   pos={this.state.faceCenter}
-      //   scale={this.state.faceScale}
-      //   onPosChange={(pos) => this.setState({ faceCenter: pos }, this.fetchEditedImg)}
-      //   onScaleChange={this.handleFaceScaleChange}
-      //   onRotateChange
-      // />;
+      return (
+        <FaceCenterer
+          src={this.state.face}
+          size={this.state.faceSize}
+          pos={this.state.faceCenter}
+          onCenterChange={(center) => this.setState({ faceCenter: center }, this.fetchEditedImg)}
+        />
+      );
     }
   }
 
