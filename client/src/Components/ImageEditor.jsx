@@ -169,6 +169,7 @@ export default class ImageEditor extends React.Component {
           <Switch
             checked={this.props.isOverlayOn}
             onChange={this.props.onOverlayChange}
+            disabled={this.props.disabled}
           />
         </Stack>
       </Paper>

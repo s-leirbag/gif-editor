@@ -8,7 +8,6 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 - Apply transforms to multiple frames at once
 - Face centering glitch cutting off top left
-- Disable editing while playing gif
 - ...
 
 ## Credits
