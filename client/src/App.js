@@ -228,22 +228,13 @@ export default class App extends React.Component {
     let readers = [];
     const self = this;
     this.state.imgs.forEach((img, i) => {
-      if (i > 2) return;
-      readers.push(new Promise(function (resolve, reject) {
-        self.fetchEditedImg(i);
-      }));
+      readers.push(new Promise((resolve, reject) => self.fetchEditedImg(i)));
     });
     
     // Trigger Promises
-    Promise.all(readers).then(() => console.log('done'))
-    .catch(err => alert(err));
-
-    // this.state.imgs.forEach((img, i) => {
-    //   this.fetchEditedImg(i);
-    // });
-    // for (let i = 0; i < this.state.imgs.length; i++) {
-    //   this.fetchEditedImg(i);
-    // }
+    Promise.all(readers)
+      .then(() => console.log('done'))
+      .catch(err => alert(err));
   }
 
   getImgSize(src, callback) {
