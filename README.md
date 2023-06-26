@@ -6,6 +6,7 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
+- Swap face/gif
 - Sample gifs and faces
 - Instructions
 - ...
