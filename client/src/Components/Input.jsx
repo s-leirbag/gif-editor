@@ -67,6 +67,7 @@ export function PositionInput(props) {
               type: 'number',
               'aria-labelledby': 'input-slider',
             }}
+            disabled={props.disabled}
           />
         </Grid>
         <Grid item sx={{ mr: 1}}>
@@ -85,6 +86,7 @@ export function PositionInput(props) {
               type: 'number',
               'aria-labelledby': 'input-slider',
             }}
+            disabled={props.disabled}
           />
         </Grid>
       </Grid>
@@ -135,6 +137,7 @@ export function InputSlider(props) {
             step={props.step}
             min={props.min}
             max={props.max}
+            disabled={props.disabled}
           />
         </Grid>
         <Grid item>
@@ -150,6 +153,7 @@ export function InputSlider(props) {
               type: 'number',
               'aria-labelledby': 'input-slider',
             }}
+            disabled={props.disabled}
           />
         </Grid>
       </Grid>

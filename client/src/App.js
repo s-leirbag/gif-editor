@@ -40,7 +40,6 @@ export default class App extends React.Component {
       gifSize: null, // gif images size in pixels
       faceCenter: null, // center position on face in pixels
       gifPositions: [], // position of face on gif images in pixels
-      faceScale: 1, // slider value for face scale
       gifFaceScales: [], // compounding scale for face in each gif image
       gifRotations: [], // rotation of face in each gif image
       playIntervalId: null, // interval for playing gif
@@ -96,7 +95,7 @@ export default class App extends React.Component {
       this.getImgSize(img, (size) => this.setState({
         faceSize: size,
         faceCenter: { x: size.width / 2, y: size.height / 2 },
-      }, this.fetchEditedImg));
+      }, this.updateAllImages));
     });
   }
 
@@ -111,7 +110,7 @@ export default class App extends React.Component {
         gifFaceScales: Array(urls.length).fill(1),
         gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
         gifRotations: Array(urls.length).fill(0),
-      }, this.fetchEditedImg));
+      }, this.updateAllImages));
 
       // Select first image if first upload
       if (this.state.curImg == null)
@@ -168,15 +167,15 @@ export default class App extends React.Component {
   }
 
   fetchEditedImg = async (imgIndex) => {
-    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifPositions', 'gifFaceScales'))
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifPositions', 'gifRotations', 'gifFaceScales'))
       return;
     
     if (imgIndex == null)
       imgIndex = this.state.curImg;
     const faceSize = this.state.faceSize;
     const gifSize = this.state.gifSize;
-
-    const scale = this.state.faceScale * this.state.gifFaceScales[imgIndex];
+    
+    const scale = this.state.gifFaceScales[imgIndex];
     let faceScaleSize = {};
     if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
       faceScaleSize.width = gifSize.width * scale;
@@ -209,6 +208,44 @@ export default class App extends React.Component {
     this.setState({ imgsEdited: newImgsEdited });
   }
 
+  updateImages = () => {
+    const curImg = this.state.curImg;
+    if (this.state.checked.every((v) => v === false))
+      this.fetchEditedImg(curImg);
+    else {
+      const newChecked = cloneDeep(this.state.checked);
+      newChecked[curImg] = true;
+      this.setState({ checked: newChecked });
+      for (let i = 0; i < this.state.imgs.length; i++) {
+        if (newChecked[i])
+          this.fetchEditedImg(i);
+      }
+    }
+  }
+
+  updateAllImages = () => {
+    // Store promises in array
+    let readers = [];
+    const self = this;
+    this.state.imgs.forEach((img, i) => {
+      if (i > 2) return;
+      readers.push(new Promise(function (resolve, reject) {
+        self.fetchEditedImg(i);
+      }));
+    });
+    
+    // Trigger Promises
+    Promise.all(readers).then(() => console.log('done'))
+    .catch(err => alert(err));
+
+    // this.state.imgs.forEach((img, i) => {
+    //   this.fetchEditedImg(i);
+    // });
+    // for (let i = 0; i < this.state.imgs.length; i++) {
+    //   this.fetchEditedImg(i);
+    // }
+  }
+
   getImgSize(src, callback) {
     const image = new Image();
     image.onload = function() {
@@ -227,17 +264,15 @@ export default class App extends React.Component {
     return false;
   }
 
-  handleFaceScaleChange = (e, v) => {
-    this.setState({ faceScale: v }, this.fetchEditedImg);
-  }
-
   handleClickImage = (i) => {
     this.setState({ curImg: i });
   }
   
   handleCheck = (i, e) => {
     const newChecked = cloneDeep(this.state.checked);
-    newChecked[i] = e.target.checked
+    newChecked[i] = e.target.checked;
+    if (e.target.checked)
+      newChecked[this.state.curImg] = true;
     this.setState({ checked: newChecked });
   }
 
@@ -304,7 +339,7 @@ export default class App extends React.Component {
           src={this.state.face}
           size={this.state.faceSize}
           pos={this.state.faceCenter}
-          onCenterChange={(center) => this.setState({ faceCenter: center }, this.fetchEditedImg)}
+          onCenterChange={(center) => this.setState({ faceCenter: center }, this.updateAllImages)}
         />
       );
     }
@@ -345,21 +380,20 @@ export default class App extends React.Component {
             onPosChange={(pos) => {
               let newGifPositions = cloneDeep(this.state.gifPositions);
               newGifPositions[curImg] = pos;
-              this.setState({ gifPositions: newGifPositions }, this.fetchEditedImg);
+              this.setState({ gifPositions: newGifPositions }, this.updateImages);
             }}
             onScaleChange={(scale) => {
-              // console.log(scale);
               const newScales = cloneDeep(this.state.gifFaceScales);
               newScales[curImg] = scale;
-              this.setState({ gifFaceScales: newScales }, this.fetchEditedImg);
+              this.setState({ gifFaceScales: newScales }, this.updateImages);
             }}
             onOverlayChange={this.handleIsOverlayOn}
             onRotateChange={(deg) => {
-              // console.log(deg);
               const newRotations = cloneDeep(this.state.gifRotations);
               newRotations[curImg] = deg;
-              this.setState({ gifRotations: newRotations }, this.fetchEditedImg);
+              this.setState({ gifRotations: newRotations }, this.updateImages);
             }}
+            disabled={this.state.playIntervalId !== null}
             key={curImg} // jank?
           />
         </>
@@ -385,8 +419,34 @@ export default class App extends React.Component {
 
   renderScroll() {
     if (this.state.imgsEdited.length !== 0) {
+      let selectButton;
+      if (this.state.checked.every((val) => val === true)) {
+        selectButton = (
+          <Button
+            component="label"
+            variant="outlined"
+            onClick={this.handleUncheckAll}
+            sx={{ borderRadius: 100 }}
+          >
+            Unselect All
+          </Button>
+        );
+      }
+      else {
+        selectButton = (
+          <Button
+            component="label"
+            variant="outlined"
+            onClick={this.handleCheckAll}
+            sx={{ borderRadius: 100 }}
+          >
+            Select All
+          </Button>
+        );
+      }
+
       return <>
-        <Stack sx={{ position: 'absolute', zIndex: 2 }} spacing={2} direction="row" alignItems="center">
+        <Stack sx={{ position: 'absolute', zIndex: 2, bottom: 32 }} spacing={2} direction="row" alignItems="center">
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
             <IconButton
               component="label"
@@ -408,14 +468,7 @@ export default class App extends React.Component {
             </IconButton>
           </Paper>
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
-            <Button
-              component="label"
-              variant="outlined"
-              onClick={this.handleCheckAll}
-              sx={{ borderRadius: 100 }}
-            >
-              Select All
-            </Button>
+            {selectButton}
           </Paper>
         </Stack>
         <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>

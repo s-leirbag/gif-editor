@@ -31,12 +31,14 @@ export default class ImageEditor extends React.Component {
   }
 
   handleMouseDown = (e) => {
+    if (this.props.disabled) return;
     const coord = { x: e.clientX, y: e.clientY };
     if (this.isInBounds(coord))
       this.setState({ dragStart: coord });
   }
 
   handleMouseUp = (e) => {
+    if (this.props.disabled) return;
     const coord = { x: e.clientX, y: e.clientY };
     if (this.state.dragStart != null && this.isInBounds(coord)) {
       // Get new position
@@ -64,6 +66,8 @@ export default class ImageEditor extends React.Component {
   isInBounds({x, y}) {
     const screenPos = this.state.screenPos;
     const screenSize = this.state.screenSize;
+    if (screenPos == null || screenSize == null)
+      return false;
     return (
       x >= screenPos.x && x <= screenPos.x + screenSize.width &&
       y >= screenPos.y && y <= screenPos.y + screenSize.height
@@ -153,10 +157,11 @@ export default class ImageEditor extends React.Component {
         maxX={screenSize == null ? 100 : screenSize.width}
         maxY={screenSize == null ? 100 : screenSize.height}
         onChange={this.props.onPosChange}
+        disabled={this.props.disabled}
       />
     )
-    const scaleSlider = <InputSlider name='Scale' value={this.props.scale} step={0.05} min={0} max={2} onChange={this.props.onScaleChange}/>;
-    const rotateSlider = <InputSlider name='Rotate' value={this.props.rotation} step={1} min={-180} max={180} onChange={this.props.onRotateChange}/>;
+    const scaleSlider = <InputSlider name='Scale' value={this.props.scale} step={0.05} min={0} max={2} onChange={this.props.onScaleChange} disabled={this.props.disabled}/>;
+    const rotateSlider = <InputSlider name='Rotate' value={this.props.rotation} step={1} min={-180} max={180} onChange={this.props.onRotateChange} disabled={this.props.disabled}/>;
     const overlaySwitch = this.props.overlay ? (
       <Paper sx={{ position: 'absolute', p: 1, borderRadius: 100, alignItems: 'center' }} elevation={4}>
         <Stack spacing={0.5} direction="row" alignItems="center">
