@@ -6,10 +6,8 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Snackbar to notify you are editing multiple frames
-- Factor out dragging
+- Simplify face centering to exact click position
 - Face centering glitch cutting off top left
-- Drag face exactly, slight error currently
 - Sample gifs and faces
 - Instructions
 - ...

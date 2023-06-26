@@ -35,6 +35,8 @@ export default class App extends React.Component {
       overlays: [], // overlays to help user edit easily
       isOverlayOn: true,
       checked: [], // checked images to apply transforms to multiple frames at once
+      shiftDown: false, // bool if shift key is down
+      commandDown: false, // bool if command key is down
       faceSize: null, // face size in pixels
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
@@ -50,13 +52,20 @@ export default class App extends React.Component {
 
   componentDidMount() {
     window.addEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keyup", this.handleKeyUp);
   }
 
   componentWillUnmount() {
     window.removeEventListener("keydown", this.handleKeyDown);
+    window.removeEventListener("keyup", this.handleKeyUp);
   }
 
   handleKeyDown = (event) => {
+    if (event.key === 'Shift')
+      this.setState({ shiftDown: true });
+    if (event.key === 'Meta')
+      this.setState({ commandDown: true });
+
     if (this.state.imgs.length === 0)
       return;
 
@@ -66,6 +75,13 @@ export default class App extends React.Component {
       this.setState({ curImg: curImg === 0 ? imgsLength - 1 : curImg - 1 }, this.scrollIntoView);
     if (event.key === 'ArrowDown' || event.key === 'ArrowRight')
       this.setState({ curImg: (curImg + 1) % imgsLength }, this.scrollIntoView);
+  }
+
+  handleKeyUp = (event) => {
+    if (event.key === 'Shift')
+      this.setState({ shiftDown: false });
+    if (event.key === 'Meta')
+      this.setState({ commandDown: false });
   }
 
   handlePlayPause = (event) => {
@@ -260,8 +276,23 @@ export default class App extends React.Component {
     return false;
   }
 
-  handleClickImage = (i) => {
-    this.setState({ curImg: i });
+  handleClickImage = (clickedImg) => {
+    const curImg = this.state.curImg;
+    if (this.state.shiftDown) {
+      const newChecked = cloneDeep(this.state.checked);
+      for (let i = curImg; i !== clickedImg; i += curImg < clickedImg ? 1 : -1)
+        newChecked[i] = true;
+      newChecked[clickedImg] = true;
+      this.setState({ checked: newChecked });
+    }
+    else if (this.state.commandDown) {
+      const newChecked = cloneDeep(this.state.checked);
+      newChecked[clickedImg] = !newChecked[clickedImg];
+      this.setState({ checked: newChecked });
+    }
+    else {
+      this.setState({ curImg: clickedImg });
+    }
   }
   
   handleCheck = (i, e) => {
@@ -420,7 +451,7 @@ export default class App extends React.Component {
               onClick={this.handlePlayPause}
               sx={{ borderRadius: 100 }}
             >
-              {this.state.playIntervalId ? <PauseIcon /> : <PlayArrowIcon />}
+              {this.state.playIntervalId ? <PauseIcon color='primary' /> : <PlayArrowIcon color='primary' />}
             </IconButton>
           </Paper>
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
@@ -430,7 +461,7 @@ export default class App extends React.Component {
               onClick={this.handleDownload}
               sx={{ borderRadius: 100 }}
             >
-              <DownloadIcon />
+              <DownloadIcon color='primary' />
             </IconButton>
           </Paper>
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
