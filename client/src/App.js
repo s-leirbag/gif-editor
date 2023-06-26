@@ -88,7 +88,6 @@ export default class App extends React.Component {
   scrollIntoView = () => this.curImgRef.current.scrollIntoView();
 
   handleFaceUpload = (e) => {
-    e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
       const img = urls[0];
       this.setState({ face: img });
@@ -100,7 +99,6 @@ export default class App extends React.Component {
   }
 
   handleImagesUpload = async (e) => {
-    e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
       this.setState({ imgs: urls, imgsEdited: urls, checked: Array(urls.length).fill(false) });
 
@@ -119,10 +117,8 @@ export default class App extends React.Component {
   }
 
   handleOverlaysUpload = (e) => {
-    e.preventDefault();
     this.readFileImgUrls(e.target.files, (urls) => {
       this.setState({ overlays: urls });
-      this.fetchEditedImg();
     });
   }
 
@@ -131,7 +127,6 @@ export default class App extends React.Component {
   }
 
   handleDownload = (e) => {
-    e.preventDefault();
     const zip = new JSZip();
     const imgsEdited = this.state.imgsEdited;
     for (let i = 0; i < imgsEdited.length; i++) {
@@ -166,75 +161,78 @@ export default class App extends React.Component {
     Promise.all(readers).then(callback);
   }
 
-  fetchEditedImg = async (imgIndex) => {
+  fetchEditedImg = async (...indexes) => {
     if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifPositions', 'gifRotations', 'gifFaceScales'))
       return;
     
-    if (imgIndex == null)
-      imgIndex = this.state.curImg;
+    if (indexes.length === 0)
+      indexes.push(this.state.curImg);
+    
+    const face = this.state.face;
+    const faceCenter = this.state.faceCenter;
     const faceSize = this.state.faceSize;
     const gifSize = this.state.gifSize;
-    
-    const scale = this.state.gifFaceScales[imgIndex];
+
     let faceScaleSize = {};
-    if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
-      faceScaleSize.width = gifSize.width * scale;
-      faceScaleSize.height = faceSize.height * (gifSize.width / faceSize.width) * scale;
-    }
-    else {
-      faceScaleSize.height = gifSize.height * scale;
-      faceScaleSize.width = faceSize.width * (gifSize.height / faceSize.height) * scale;
+    let newImgsEdited = cloneDeep(this.state.imgsEdited);
+    for (let i of indexes) {
+      const scale = this.state.gifFaceScales[i];
+      if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
+        faceScaleSize.width = gifSize.width * scale;
+        faceScaleSize.height = faceSize.height * (gifSize.width / faceSize.width) * scale;
+      }
+      else {
+        faceScaleSize.height = gifSize.height * scale;
+        faceScaleSize.width = faceSize.width * (gifSize.height / faceSize.height) * scale;
+      }
+      
+      let data = new FormData();
+      data.append('face', face);
+      data.append('image', this.state.imgs[i]);
+      data.append('faceSize', JSON.stringify(faceSize));
+      data.append('gifSize', JSON.stringify(gifSize));
+      data.append('faceScaleSize', JSON.stringify(faceScaleSize));
+      data.append('faceCenter', JSON.stringify(faceCenter));
+      data.append('facePos', JSON.stringify(this.state.gifPositions[i]));
+      data.append('faceRot', JSON.stringify(this.state.gifRotations[i]));
+      
+      const response = await fetch('/testAPI', { method: "POST", body: data });
+      if (!response.ok) return;
+      newImgsEdited[i] = await response.text();
     }
     this.setState({ faceScaleSize });
-    
-    let data = new FormData();
-    data.append('face', this.state.face);
-    data.append('image', this.state.imgs[imgIndex]);
-    data.append('faceSize', JSON.stringify(faceSize));
-    data.append('gifSize', JSON.stringify(gifSize));
-    data.append('faceScaleSize', JSON.stringify(faceScaleSize));
-    data.append('faceCenter', JSON.stringify(this.state.faceCenter));
-    data.append('facePos', JSON.stringify(this.state.gifPositions[imgIndex]));
-    data.append('faceRot', JSON.stringify(this.state.gifRotations[imgIndex]));
-    const response = await fetch('/testAPI', {
-      method: "POST",
-      body: data,
-    });
-    if (!response.ok)
-      return;
-
-    let newImgsEdited = cloneDeep(this.state.imgsEdited);
-    newImgsEdited[imgIndex] = await response.text();
     this.setState({ imgsEdited: newImgsEdited });
   }
 
-  updateImages = () => {
-    const curImg = this.state.curImg;
-    if (this.state.checked.every((v) => v === false))
-      this.fetchEditedImg(curImg);
-    else {
-      const newChecked = cloneDeep(this.state.checked);
-      newChecked[curImg] = true;
-      this.setState({ checked: newChecked });
-      for (let i = 0; i < this.state.imgs.length; i++) {
-        if (newChecked[i])
-          this.fetchEditedImg(i);
-      }
-    }
+  updateAllImages = () => {
+    this.fetchEditedImg(...this.state.imgs.keys());
   }
 
-  updateAllImages = () => {
-    // Store promises in array
-    let readers = [];
-    const self = this;
-    this.state.imgs.forEach((img, i) => {
-      readers.push(new Promise((resolve, reject) => self.fetchEditedImg(i)));
-    });
-    
-    // Trigger Promises
-    Promise.all(readers)
-      .then(() => console.log('done'))
-      .catch(err => alert(err));
+  // Update current image
+  // And update checked images also if other images are checked
+  onImgAttrChange = (arrayName, val) => {
+    const curImg = this.state.curImg;
+    if (this.state.checked.every((v) => v === false)) {
+      const newArray = cloneDeep(this.state[arrayName]);
+      newArray[curImg] = val;
+      this.setState({ [arrayName]: newArray }, () => this.fetchEditedImg(curImg));
+    }
+    else {
+      // Check current image
+      const newChecked = cloneDeep(this.state.checked);
+      newChecked[this.state.curImg] = true;
+      this.setState({ checked: newChecked });
+
+      // Get indexes of checked images
+      // Aka get indexes of true elements in checked array
+      const indexes = newChecked.reduce((a, check, i) => (check ? a.concat(i) : a), []);
+
+      const newArray = cloneDeep(this.state[arrayName]);
+      for (const i of indexes)
+        newArray[i] = val;
+      
+      this.setState({ [arrayName]: newArray }, () => this.fetchEditedImg(...indexes));
+    }
   }
 
   getImgSize(src, callback) {
@@ -368,22 +366,10 @@ export default class App extends React.Component {
             pos={this.state.gifPositions[curImg]}
             scale={this.state.gifFaceScales[curImg]}
             rotation={this.state.gifRotations[curImg]}
-            onPosChange={(pos) => {
-              let newGifPositions = cloneDeep(this.state.gifPositions);
-              newGifPositions[curImg] = pos;
-              this.setState({ gifPositions: newGifPositions }, this.updateImages);
-            }}
-            onScaleChange={(scale) => {
-              const newScales = cloneDeep(this.state.gifFaceScales);
-              newScales[curImg] = scale;
-              this.setState({ gifFaceScales: newScales }, this.updateImages);
-            }}
+            onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
+            onScaleChange={(scale) => this.onImgAttrChange('gifFaceScales', scale)}
             onOverlayChange={this.handleIsOverlayOn}
-            onRotateChange={(deg) => {
-              const newRotations = cloneDeep(this.state.gifRotations);
-              newRotations[curImg] = deg;
-              this.setState({ gifRotations: newRotations }, this.updateImages);
-            }}
+            onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
             disabled={this.state.playIntervalId !== null}
             key={curImg} // jank?
           />

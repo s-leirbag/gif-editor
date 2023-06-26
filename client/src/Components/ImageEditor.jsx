@@ -162,7 +162,7 @@ export default class ImageEditor extends React.Component {
     )
     const scaleSlider = <InputSlider name='Scale' value={this.props.scale} step={0.05} min={0} max={2} onChange={this.props.onScaleChange} disabled={this.props.disabled}/>;
     const rotateSlider = <InputSlider name='Rotate' value={this.props.rotation} step={1} min={-180} max={180} onChange={this.props.onRotateChange} disabled={this.props.disabled}/>;
-    const overlaySwitch = this.props.overlay ? (
+    const overlaySwitch = this.props.overlay && !this.props.disabled ? (
       <Paper sx={{ position: 'absolute', p: 1, borderRadius: 100, alignItems: 'center' }} elevation={4}>
         <Stack spacing={0.5} direction="row" alignItems="center">
           <Typography variant='h6' component='h6'>Overlay</Typography>

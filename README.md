@@ -6,7 +6,7 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Apply transforms to multiple frames at once
+- Option to hide face
 - Face centering glitch cutting off top left
 - ...
 
