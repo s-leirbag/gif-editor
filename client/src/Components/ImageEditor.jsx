@@ -81,19 +81,28 @@ export default class ImageEditor extends React.Component {
   }
 
   sizeActualToScreen({x, y}) {
-    const screenSize = this.state.screenSize;
-    return {
-      x: x * screenSize.width / this.props.size.width,
-      y: y * screenSize.height / this.props.size.height,
-    };
+    const scalar = this.getSizeActualToScreenScalar();
+    return { x: x * scalar, y: y * scalar };
   }
 
   sizeScreenToActual({x, y}) {
+    let scalar = 1 / this.getSizeActualToScreenScalar();
+    return { x: x * scalar, y: y * scalar };      
+  }
+
+  // All this logic is needed because the image may have some white bars on the sides or top/bottom
+  // And apparently these bars are counted in the html element's position and size
+  // So the image's actual pixel aspect ratio may be different from the html element's aspect ratio
+  getSizeActualToScreenScalar() {
     const screenSize = this.state.screenSize;
-    return {
-      x: x * this.props.size.width / screenSize.width,
-      y: y * this.props.size.height / screenSize.height,
-    };
+    const actualSize = this.props.size;
+    if (screenSize.height / screenSize.width > actualSize.height / actualSize.width) {
+      // screen is taller than actual, width is accurate, use width to scale
+      return screenSize.width / actualSize.width;
+    } else {
+      // screen is wider than actual, height is accurate, use height to scale
+      return screenSize.height / actualSize.height;
+    }
   }
   
   getScreenSizePos = () => {

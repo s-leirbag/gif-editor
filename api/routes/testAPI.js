@@ -37,15 +37,18 @@ router.post("/", cpUpload, async (req, res) => {
 
   face = await resize(face, faceScaleSize.width, faceScaleSize.height, sharp.kernel.nearest);
 
-  // Center and rotate
-  face = await translate(face, center.x - faceCenter.x, center.y - faceCenter.y);
+  // Rotate
   face = await rotate(face, faceRot);
 
   // Move to face position
+  let c2fc = subtractVectors(faceCenter, center); // center to face center
+  rotatedc2fc = rotateVector(c2fc, faceRot); // rotated center to face center
   const rotCenter = getCenter(await getSize(face));
+  const rotatedFC = addVectors(rotCenter, rotatedc2fc); // find face center based on rotated center
+  // move from new rotated face center to the face position/where the center should be
   face = await translate(face,
-    parseInt(facePos.x - rotCenter.x),
-    parseInt(facePos.y - rotCenter.y)
+    parseInt(facePos.x - rotatedFC.x),
+    parseInt(facePos.y - rotatedFC.y),
   );
 
   // Merge images
@@ -64,6 +67,24 @@ objValsToInts = (obj) => {
 getCenter = ({ width, height }) => {
   return { x: width / 2, y: height / 2 };
 }
+
+addVectors = (vec1, vec2) => {
+  return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
+}
+
+subtractVectors = (vec1, vec2) => {
+  return { x: vec1.x - vec2.x, y: vec1.y - vec2.y };
+}
+
+rotateVector = (vec, ang) => {
+  ang = ang * (Math.PI/180);
+  const cos = Math.cos(ang);
+  const sin = Math.sin(ang);
+  return {
+    x: Math.round(10000*(vec.x * cos - vec.y * sin))/10000,
+    y: Math.round(10000*(vec.x * sin + vec.y * cos))/10000,
+  };
+};
 
 transparent = { r: 0, g: 0, b: 0, alpha: 0 };
 

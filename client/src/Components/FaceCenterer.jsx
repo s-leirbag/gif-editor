@@ -32,14 +32,32 @@ export default class FaceCenterer extends React.Component {
   handleMouseUp = (e) => {
     const coord = { x: e.clientX, y: e.clientY };
     if (this.isInBounds(coord)) {
-      // Get new center
-      const screenPos = this.state.screenPos;
-      let newPos = { x: coord.x - screenPos.x, y: coord.y - screenPos.y };
-      newPos = this.sizeScreenToActual(newPos);
+      // Calculate new center
+
+      // center to face center
+      const screenCenter = this.state.screenCenter;
+      let c2fc = { x: coord.x - screenCenter.x, y: coord.y - screenCenter.y };
+      // scale from screen to actual pixels
+      c2fc = this.sizeScreenToActual(c2fc);
+      // add to actual center then round
+      const center = this.getCenter(this.props.size);
+      let newPos = this.addVectors(center, c2fc);
       newPos = { x: Math.round(newPos.x), y: Math.round(newPos.y) };
 
       this.props.onCenterChange(newPos);
     }
+  }
+
+  getCenter = ({ width, height }) => {
+    return { x: width / 2, y: height / 2 };
+  }
+  
+  addVectors = (vec1, vec2) => {
+    return { x: vec1.x + vec2.x, y: vec1.y + vec2.y };
+  }
+  
+  subtractVectors = (vec1, vec2) => {
+    return { x: vec1.x - vec2.x, y: vec1.y - vec2.y };
   }
 
   isInBounds({x, y}) {
@@ -52,19 +70,28 @@ export default class FaceCenterer extends React.Component {
   }
 
   sizeActualToScreen({x, y}) {
-    const screenSize = this.state.screenSize;
-    return {
-      x: x * screenSize.width / this.props.size.width,
-      y: y * screenSize.height / this.props.size.height,
-    };
+    const scalar = this.getSizeActualToScreenScalar();
+    return { x: x * scalar, y: y * scalar };
   }
 
   sizeScreenToActual({x, y}) {
+    let scalar = 1 / this.getSizeActualToScreenScalar();
+    return { x: x * scalar, y: y * scalar };      
+  }
+
+  // All this logic is needed because the image may have some white bars on the sides or top/bottom
+  // And apparently these bars are counted in the html element's position and size
+  // So the image's actual pixel aspect ratio may be different from the html element's aspect ratio
+  getSizeActualToScreenScalar() {
     const screenSize = this.state.screenSize;
-    return {
-      x: x * this.props.size.width / screenSize.width,
-      y: y * this.props.size.height / screenSize.height,
-    };
+    const actualSize = this.props.size;
+    if (screenSize.height / screenSize.width > actualSize.height / actualSize.width) {
+      // screen is taller than actual, width is accurate, use width to scale
+      return screenSize.width / actualSize.width;
+    } else {
+      // screen is wider than actual, height is accurate, use height to scale
+      return screenSize.height / actualSize.height;
+    }
   }
 
   getScreenSizePos = () => {
@@ -76,6 +103,7 @@ export default class FaceCenterer extends React.Component {
     this.setState({
       screenSize: { width, height },
       screenPos: { x, y },
+      screenCenter: { x: x + width / 2, y: y + height / 2 },
     });
   };
 
@@ -94,11 +122,10 @@ export default class FaceCenterer extends React.Component {
 
     let centerMarker = '';
     if (this.state.screenSize != null && this.state.screenPos != null) {
-      const screenPos = this.state.screenPos;
-      const center = {
-        x: screenPos.x + this.sizeActualToScreen(this.props.pos).x,
-        y: screenPos.y + this.sizeActualToScreen(this.props.pos).y,
-      }
+      const screenCenter = this.state.screenCenter;
+      let diff = this.subtractVectors(this.props.pos, this.getCenter(this.props.size));
+      diff = this.sizeActualToScreen(diff);
+      const center = this.addVectors(screenCenter, diff)
       centerMarker = (
         <>
           <Paper

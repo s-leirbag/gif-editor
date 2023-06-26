@@ -6,7 +6,6 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Face centering glitch cutting off top left
 - Sample gifs and faces
 - Instructions
 - ...
