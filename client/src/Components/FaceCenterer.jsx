@@ -15,16 +15,19 @@ export default class FaceCenterer extends React.Component {
       screenPos: null,
       dragStart: null,
     };
+    this.imgRef = React.createRef();
   }
 
   componentDidMount() {
     window.addEventListener("mousedown", this.handleMouseDown);
     window.addEventListener("mouseup", this.handleMouseUp);
+    window.addEventListener('resize', this.getScreenSizePos);
   }
   
   componentWillUnmount() {
     window.removeEventListener("mousedown", this.handleMouseDown);
     window.removeEventListener("mouseup", this.handleMouseUp);
+    window.removeEventListener('resize', this.getScreenSizePos);
   }
 
   handleMouseDown = (e) => {
@@ -83,24 +86,28 @@ export default class FaceCenterer extends React.Component {
     };
   }
 
+  getScreenSizePos = () => {
+    const img = this.imgRef.current;
+    const height = img.clientHeight;
+    const width = img.clientWidth;
+    const x = img.offsetLeft;
+    const y = img.offsetTop;
+    this.setState({
+      screenSize: { width, height },
+      screenPos: { x, y },
+    });
+  };
+
   renderFace() {
     const face = (
       <img
         src={this.props.src}
-        alt={'face'}
-        loading="lazy"
+        alt='face'
+        loading='lazy'
         key='image'
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-        onLoad={({target:img}) => {
-          const height = img.clientHeight;
-          const width = img.clientWidth;
-          const x = img.getBoundingClientRect().left;
-          const y = img.getBoundingClientRect().top;
-          this.setState({
-            screenSize: { width, height },
-            screenPos: { x, y },
-          });
-        }}
+        onLoad={this.getScreenSizePos}
+        ref={this.imgRef}
       />
     );
 

@@ -5,9 +5,12 @@ import { PositionInput, InputSlider } from './Input.jsx';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
+
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 export default class ImageEditor extends React.Component {
   constructor(props) {
@@ -17,16 +20,19 @@ export default class ImageEditor extends React.Component {
       screenPos: null,
       dragStart: null,
     };
+    this.imgRef = React.createRef();
   }
 
   componentDidMount() {
     window.addEventListener("mousedown", this.handleMouseDown);
     window.addEventListener("mouseup", this.handleMouseUp);
+    window.addEventListener('resize', this.getScreenSizePos);
   }
   
   componentWillUnmount() {
     window.removeEventListener("mousedown", this.handleMouseDown);
     window.removeEventListener("mouseup", this.handleMouseUp);
+    window.removeEventListener('resize', this.getScreenSizePos);
   }
 
   handleMouseDown = (e) => {
@@ -37,9 +43,10 @@ export default class ImageEditor extends React.Component {
   }
 
   handleMouseUp = (e) => {
-    if (this.props.disabled) return;
+    if (this.props.disabled || this.state.dragStart == null || this.props.faceScaleSize == null)
+      return;
     const coord = { x: e.clientX, y: e.clientY };
-    if (this.state.dragStart != null && this.isInBounds(coord)) {
+    if (this.isInBounds(coord)) {
       // Get new position
       const dragStart = this.state.dragStart;
       let diff = { x: coord.x - dragStart.x, y: coord.y - dragStart.y };
@@ -88,25 +95,29 @@ export default class ImageEditor extends React.Component {
       y: y * this.props.size.height / screenSize.height,
     };
   }
+  
+  getScreenSizePos = () => {
+    const img = this.imgRef.current;
+    const height = img.clientHeight;
+    const width = img.clientWidth;
+    const x = img.offsetLeft;
+    const y = img.offsetTop;
+    this.setState({
+      screenSize: { width, height },
+      screenPos: { x, y },
+    });
+  };
 
   renderImage() {
     const image = [
       <img
         src={this.props.src}
-        alt={this.props.name}
-        loading="lazy"
+        alt='current'
+        loading='lazy'
         key='image'
         style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-        onLoad={({target:img}) => {
-          const height = img.clientHeight;
-          const width = img.clientWidth;
-          const x = img.getBoundingClientRect().left;
-          const y = img.getBoundingClientRect().top;
-          this.setState({
-            screenSize: { width, height },
-            screenPos: { x, y },
-          });
-        }}
+        onLoad={this.getScreenSizePos}
+        ref={this.imgRef}
       />
     ];
 
@@ -193,16 +204,35 @@ export default class ImageEditor extends React.Component {
         />
       </Stack>
     ) : '';
-    const overlaySwitch = this.props.overlay && !disabled ? (
-      <Stack spacing={0.5} direction="row" alignItems="center">
-        <Typography variant='h6' component='h6'>Overlay</Typography>
-        <Switch
-          checked={this.props.isOverlayOn}
-          onChange={this.props.onOverlayChange}
-          disabled={this.props.disabled}
-        />
-      </Stack>
-    ) : '';
+    let overlayUI = '';
+    if (!this.props.overlay) {
+      overlayUI = (
+        <Stack spacing={0.5} direction="row" alignItems="center">
+          <Typography variant='h6' component='h6'>Overlays</Typography>
+          <IconButton
+            component="label"
+            variant="outlined"
+            color='primary'
+            sx={{ borderRadius: 100 }}
+          >
+            <UploadFileIcon />
+            <input type="file" accept="image/*" multiple hidden onChange={this.props.onOverlaysUpload} />
+          </IconButton>
+        </Stack>
+      );
+    }
+    else if (!disabled) {
+      overlayUI = (
+        <Stack spacing={0.5} direction="row" alignItems="center">
+          <Typography variant='h6' component='h6'>Overlay</Typography>
+          <Switch
+            checked={this.props.isOverlayOn}
+            onChange={this.props.onOverlayChange}
+            disabled={this.props.disabled}
+          />
+        </Stack>
+      )
+    }
 
     return (
       <Box sx={{ height: 'calc(100% - 100px)', display: 'flex', flexDirection: 'column' }}>
@@ -215,7 +245,7 @@ export default class ImageEditor extends React.Component {
           </Grid>
           <Grid item xs={4} sx={{ height: '70%' }}>
             {faceSwitch}
-            {overlaySwitch}
+            {overlayUI}
           </Grid>
         </Grid>
       </Box>

@@ -359,48 +359,28 @@ export default class App extends React.Component {
     }
     else {
       const curImg = this.state.curImg;
-      const overlayButton = this.renderOverlayButton();
       return (
-        <>
-          {overlayButton}
-          <ImageEditor
-            name='current'
-            src={this.state.imgsEdited[curImg]}
-            overlay={this.state.overlays[curImg]}
-            isOverlayOn={this.state.isOverlayOn}
-            faceShown={this.state.gifFacesShown[curImg]}
-            faceScaleSize={this.state.faceScaleSize}
-            size={this.state.gifSize}
-            pos={this.state.gifPositions[curImg]}
-            scale={this.state.gifFaceScales[curImg]}
-            rotation={this.state.gifRotations[curImg]}
-            onFaceToggle={(e, c) => this.onImgAttrChange('gifFacesShown', c)}
-            onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
-            onScaleChange={(scale) => this.onImgAttrChange('gifFaceScales', scale)}
-            onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
-            onOverlayChange={this.handleIsOverlayOn}
-            disabled={this.state.playIntervalId !== null}
-            key={curImg} // jank?
-          />
-        </>
+        <ImageEditor
+          src={this.state.imgsEdited[curImg]}
+          overlay={this.state.overlays[curImg]}
+          isOverlayOn={this.state.isOverlayOn}
+          faceShown={this.state.gifFacesShown[curImg]}
+          faceScaleSize={this.state.faceScaleSize}
+          size={this.state.gifSize}
+          pos={this.state.gifPositions[curImg]}
+          scale={this.state.gifFaceScales[curImg]}
+          rotation={this.state.gifRotations[curImg]}
+          onFaceToggle={(e, c) => this.onImgAttrChange('gifFacesShown', c)}
+          onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
+          onScaleChange={(scale) => this.onImgAttrChange('gifFaceScales', scale)}
+          onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
+          onOverlayChange={this.handleIsOverlayOn}
+          onOverlaysUpload={this.handleOverlaysUpload}
+          disabled={this.state.playIntervalId !== null}
+          key={curImg} // jank?
+        />
       );
     }
-  }
-
-  renderOverlayButton() {
-    return this.state.overlays && this.state.overlays.length > 0 ? null : (
-      <Paper sx={{ position: 'absolute', borderRadius: 100, alignItems: "center" }} elevation={4}>
-        <Button
-          component="label"
-          variant="outlined"
-          startIcon={<UploadFileIcon />}
-          sx={{ borderRadius: 100 }}
-        >
-          <Typography variant="h6">Upload Overlays</Typography>
-          <input type="file" accept="image/*" multiple hidden onChange={this.handleOverlaysUpload} />
-        </Button>
-      </Paper>
-    );
   }
 
   renderScroll() {
