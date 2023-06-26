@@ -403,7 +403,7 @@ export default class App extends React.Component {
           rotation={this.state.gifRotations[curImg]}
           onFaceToggle={(e, c) => this.onImgAttrChange('gifFacesShown', c)}
           onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
-          onScaleChange={(scale) => this.onImgAttrChange('gifFaceScales', scale)}
+          onScaleChange={(scale) => {if (scale !== 0) this.onImgAttrChange('gifFaceScales', scale)}}
           onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
           onOverlayChange={this.handleIsOverlayOn}
           onOverlaysUpload={this.handleOverlaysUpload}
@@ -424,6 +424,7 @@ export default class App extends React.Component {
             variant="outlined"
             onClick={this.handleUncheckAll}
             sx={{ borderRadius: 100 }}
+            disabled={this.state.playIntervalId !== null}
           >
             Unselect All
           </Button>
@@ -436,6 +437,7 @@ export default class App extends React.Component {
             variant="outlined"
             onClick={this.handleCheckAll}
             sx={{ borderRadius: 100 }}
+            disabled={this.state.playIntervalId !== null}
           >
             Select All
           </Button>
@@ -460,8 +462,9 @@ export default class App extends React.Component {
               variant="outlined"
               onClick={this.handleDownload}
               sx={{ borderRadius: 100 }}
+              disabled={this.state.playIntervalId !== null}
             >
-              <DownloadIcon color='primary' />
+              <DownloadIcon color={this.state.playIntervalId ? 'default' : 'primary'} />
             </IconButton>
           </Paper>
           <Paper sx={{ borderRadius: 100 }} elevation={4}>

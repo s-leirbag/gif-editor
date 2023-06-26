@@ -9,6 +9,7 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 - Swap face/gif
 - Sample gifs and faces
 - Instructions
+- Non-png support
 - ...
 
 ## Credits

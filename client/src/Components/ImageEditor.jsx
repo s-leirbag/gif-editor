@@ -203,16 +203,17 @@ export default class ImageEditor extends React.Component {
         disabled={this.props.disabled || !faceShown}
       />
     );
-    const faceSwitch = !this.props.disabled ? (
+    const faceSwitch = (
       <Stack spacing={0.5} direction="row" alignItems="center">
         <Typography variant='h6' component='h6'>Face</Typography>
         <Switch
           checked={this.props.faceShown}
           onChange={this.props.onFaceToggle}
           disabled={this.props.disabled}
+          color={this.props.disabled ? 'default' : 'primary'}
         />
       </Stack>
-    ) : '';
+    );
     let overlayUI = '';
     if (!this.props.overlay) {
       overlayUI = (
@@ -223,6 +224,7 @@ export default class ImageEditor extends React.Component {
             variant="outlined"
             color='primary'
             sx={{ borderRadius: 100 }}
+            disabled={this.props.disabled}
           >
             <UploadFileIcon />
             <input type="file" accept="image/*" multiple hidden onChange={this.props.onOverlaysUpload} />
@@ -230,7 +232,7 @@ export default class ImageEditor extends React.Component {
         </Stack>
       );
     }
-    else if (!disabled) {
+    else {
       overlayUI = (
         <Stack spacing={0.5} direction="row" alignItems="center">
           <Typography variant='h6' component='h6'>Overlay</Typography>
@@ -240,7 +242,7 @@ export default class ImageEditor extends React.Component {
             disabled={this.props.disabled}
           />
         </Stack>
-      )
+      );
     }
 
     return (
