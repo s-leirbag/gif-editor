@@ -123,14 +123,12 @@ export default class App extends React.Component {
       this.getImgSize(urls[0], (size) => this.setState({
         gifSize: size,
         gifFacesShown: Array(urls.length).fill(true),
-        gifFaceScales: Array(urls.length).fill(1),
+        gifFaceScales: Array(urls.length).fill(0.5),
         gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
         gifRotations: Array(urls.length).fill(0),
       }, this.updateAllImages));
 
-      // Select first image if first upload
-      if (this.state.curImg == null)
-        this.setState({ curImg: 0 });
+      this.setState({ curImg: 0, overlays: [] });
     });
   }
 
@@ -352,9 +350,8 @@ export default class App extends React.Component {
             component="label"
             variant="outlined"
             startIcon={<UploadFileIcon />}
-            sx={{ marginRight: "1rem" }}
           >
-            <Typography variant="h6" component='h6'>Upload Face</Typography>
+            <Typography variant="h6">Upload Face</Typography>
             <input type="file" accept="image/*" hidden onChange={this.handleFaceUpload} />
           </Button>
         </Box>
@@ -367,6 +364,7 @@ export default class App extends React.Component {
           size={this.state.faceSize}
           pos={this.state.faceCenter}
           onCenterChange={(center) => this.setState({ faceCenter: center }, this.updateAllImages)}
+          onFaceUpload={this.handleFaceUpload}
         />
       );
     }
@@ -380,7 +378,6 @@ export default class App extends React.Component {
             component="label"
             variant="outlined"
             startIcon={<UploadFileIcon />}
-            sx={{ marginRight: "1rem" }}
           >
             <Typography variant="h6">Upload Images</Typography>
             <input type="file" accept="image/*" multiple hidden onChange={this.handleImagesUpload} />
@@ -407,6 +404,7 @@ export default class App extends React.Component {
           onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
           onOverlayChange={this.handleIsOverlayOn}
           onOverlaysUpload={this.handleOverlaysUpload}
+          onImagesUpload={this.handleImagesUpload}
           disabled={this.state.playIntervalId !== null}
           key={curImg} // jank?
         />
@@ -486,17 +484,17 @@ export default class App extends React.Component {
       <div className="App">
         <CssBaseline />
         <Grid container columnSpacing={2} sx={{ p: 2, height: '100vh' }}>
-          <Grid item xs={6} sx={{ height: '70%' }}>
+          <Grid item xs={6} sx={{ height: '80%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               {face}
             </Paper>
           </Grid>
-          <Grid item xs={6} sx={{ height: '70%' }}>
+          <Grid item xs={6} sx={{ height: '80%' }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               {curImg}
             </Paper>
           </Grid>
-          <Grid item xs={12} sx={{ height: 'calc(30% - 16px)', mt: 2 }}>
+          <Grid item xs={12} sx={{ height: 'calc(20% - 16px)', mt: 2 }}>
             <Paper sx={{ p: 2, height: '100%' }} elevation={4}>
               {scroll}
             </Paper>

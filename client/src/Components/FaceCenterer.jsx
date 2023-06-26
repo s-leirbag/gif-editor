@@ -4,10 +4,14 @@ import './FaceCenterer.css'
 import { PositionInput } from './Input.jsx';
 
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
+import Stack from '@mui/material/Stack';
+import Typography from '@mui/material/Typography';
 
 import AddIcon from '@mui/icons-material/Add';
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 export default class FaceCenterer extends React.Component {
   constructor(props) {
@@ -184,9 +188,26 @@ export default class FaceCenterer extends React.Component {
         onChange={this.props.onCenterChange}
       />
     );
+    const changeFace = (
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <Button
+          component="label"
+          variant="outlined"
+          startIcon={<UploadFileIcon />}
+          disabled={this.props.disabled}
+        >
+          <Typography variant="h6">Change Face</Typography>
+          <input type="file" accept="image/*" hidden onChange={this.props.onFaceUpload} />
+        </Button>
+      </Box>
+    );
 
     return (
-      <Box sx={{ height: 'calc(100% - 100px)', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ height: 'calc(100% - 80px)', display: 'flex', flexDirection: 'column' }}>
+        <Stack spacing={2} direction="row" alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant='h4' component='h4'>Face</Typography>
+          {changeFace}
+        </Stack>
         {face}
         {positionInput}
       </Box>

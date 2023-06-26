@@ -4,8 +4,8 @@ import './ImageEditor.css'
 import { PositionInput, InputSlider } from './Input.jsx';
 
 import Box from '@mui/material/Box';
+import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid';
-import IconButton from '@mui/material/IconButton';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
@@ -214,49 +214,63 @@ export default class ImageEditor extends React.Component {
         />
       </Stack>
     );
-    let overlayUI = '';
-    if (!this.props.overlay) {
-      overlayUI = (
-        <Stack spacing={0.5} direction="row" alignItems="center">
-          <Typography variant='h6' component='h6'>Overlays</Typography>
-          <IconButton
-            component="label"
-            variant="outlined"
-            color='primary'
-            sx={{ borderRadius: 100 }}
-            disabled={this.props.disabled}
-          >
-            <UploadFileIcon />
-            <input type="file" accept="image/*" multiple hidden onChange={this.props.onOverlaysUpload} />
-          </IconButton>
-        </Stack>
-      );
-    }
-    else {
-      overlayUI = (
-        <Stack spacing={0.5} direction="row" alignItems="center">
-          <Typography variant='h6' component='h6'>Overlay</Typography>
-          <Switch
-            checked={this.props.isOverlayOn}
-            onChange={this.props.onOverlayChange}
-            disabled={this.props.disabled}
-          />
-        </Stack>
-      );
-    }
+    let overlayUpload = '';
+    let overlaySwitch = '';
+    overlaySwitch = (
+      <Stack spacing={0.5} direction="row" alignItems="center">
+        <Typography variant='h6' component='h6'>Overlay</Typography>
+        <Switch
+          checked={this.props.isOverlayOn}
+          onChange={this.props.onOverlayChange}
+          disabled={this.props.disabled || !this.props.overlay}
+          color={this.props.disabled || !this.props.overlay ? 'default' : 'primary'}
+        />
+      </Stack>
+    );
+    overlayUpload = (
+      <Box>
+        <Button
+          component="label"
+          variant="outlined"
+          startIcon={<UploadFileIcon />}
+          disabled={this.props.disabled}
+        >
+          <Typography variant="h6">{this.props.overlay ? 'Swap Overlay' : 'Set Overlay'}</Typography>
+          <input type="file" accept="image/*" multiple hidden onChange={this.props.onOverlaysUpload} />
+        </Button>
+      </Box>
+    );
+    const changeGif = (
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+        <Button
+          component="label"
+          variant="outlined"
+          startIcon={<UploadFileIcon />}
+          disabled={this.props.disabled}
+        >
+          <Typography variant="h6">Change Gif</Typography>
+          <input type="file" accept="image/*" multiple hidden onChange={this.props.onImagesUpload} />
+        </Button>
+      </Box>
+    );
 
     return (
-      <Box sx={{ height: 'calc(100% - 100px)', display: 'flex', flexDirection: 'column' }}>
+      <Box sx={{ height: 'calc(100% - 160px)', display: 'flex', flexDirection: 'column' }}>
+        <Stack spacing={2} direction="row" alignItems="center" sx={{ mb: 1 }}>
+          <Typography variant='h4' component='h4'>Gif</Typography>
+          {changeGif}
+        </Stack>
         {image}
         <Grid container columnSpacing={4} sx={{ height: '100%' }}>
-          <Grid item xs={8} sx={{ height: '70%' }}>
+          <Grid item xs={7} sx={{ height: '70%' }}>
             {scaleSlider}
             {rotateSlider}
             {positionInput}
           </Grid>
-          <Grid item xs={4} sx={{ height: '70%' }}>
+          <Grid item xs={5} sx={{ height: '70%' }}>
             {faceSwitch}
-            {overlayUI}
+            {overlaySwitch}
+            {overlayUpload}
           </Grid>
         </Grid>
       </Box>
