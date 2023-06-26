@@ -4,8 +4,7 @@ import './ImageEditor.css'
 import { PositionInput, InputSlider } from './Input.jsx';
 
 import Box from '@mui/material/Box';
-// import IconButton from '@mui/material/IconButton';
-import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
@@ -145,6 +144,8 @@ export default class ImageEditor extends React.Component {
     
     const image = this.renderImage();
 
+    const disabled = this.props.disabled;
+    const faceShown = this.props.faceShown;
     const screenSize = this.state.screenSize;
     const positionInput = (
       <PositionInput
@@ -157,31 +158,66 @@ export default class ImageEditor extends React.Component {
         maxX={screenSize == null ? 100 : screenSize.width}
         maxY={screenSize == null ? 100 : screenSize.height}
         onChange={this.props.onPosChange}
-        disabled={this.props.disabled}
+        disabled={disabled || !faceShown}
       />
     )
-    const scaleSlider = <InputSlider name='Scale' value={this.props.scale} step={0.05} min={0} max={2} onChange={this.props.onScaleChange} disabled={this.props.disabled}/>;
-    const rotateSlider = <InputSlider name='Rotate' value={this.props.rotation} step={1} min={-180} max={180} onChange={this.props.onRotateChange} disabled={this.props.disabled}/>;
-    const overlaySwitch = this.props.overlay && !this.props.disabled ? (
-      <Paper sx={{ position: 'absolute', p: 1, borderRadius: 100, alignItems: 'center' }} elevation={4}>
-        <Stack spacing={0.5} direction="row" alignItems="center">
-          <Typography variant='h6' component='h6'>Overlay</Typography>
-          <Switch
-            checked={this.props.isOverlayOn}
-            onChange={this.props.onOverlayChange}
-            disabled={this.props.disabled}
-          />
-        </Stack>
-      </Paper>
+    const scaleSlider = (
+      <InputSlider
+        name='Scale'
+        value={this.props.scale}
+        step={0.05}
+        min={0}
+        max={2}
+        onChange={this.props.onScaleChange}
+        disabled={this.props.disabled || !faceShown}
+      />
+    );
+    const rotateSlider = (
+      <InputSlider
+        name='Rotate'
+        value={this.props.rotation}
+        step={1}
+        min={-180}
+        max={180}
+        onChange={this.props.onRotateChange}
+        disabled={this.props.disabled || !faceShown}
+      />
+    );
+    const faceSwitch = !this.props.disabled ? (
+      <Stack spacing={0.5} direction="row" alignItems="center">
+        <Typography variant='h6' component='h6'>Face</Typography>
+        <Switch
+          checked={this.props.faceShown}
+          onChange={this.props.onFaceToggle}
+          disabled={this.props.disabled}
+        />
+      </Stack>
+    ) : '';
+    const overlaySwitch = this.props.overlay && !disabled ? (
+      <Stack spacing={0.5} direction="row" alignItems="center">
+        <Typography variant='h6' component='h6'>Overlay</Typography>
+        <Switch
+          checked={this.props.isOverlayOn}
+          onChange={this.props.onOverlayChange}
+          disabled={this.props.disabled}
+        />
+      </Stack>
     ) : '';
 
     return (
       <Box sx={{ height: 'calc(100% - 100px)', display: 'flex', flexDirection: 'column' }}>
         {image}
-        {scaleSlider}
-        {positionInput}
-        {rotateSlider}
-        {overlaySwitch}
+        <Grid container columnSpacing={4} sx={{ height: '100%' }}>
+          <Grid item xs={8} sx={{ height: '70%' }}>
+            {scaleSlider}
+            {rotateSlider}
+            {positionInput}
+          </Grid>
+          <Grid item xs={4} sx={{ height: '70%' }}>
+            {faceSwitch}
+            {overlaySwitch}
+          </Grid>
+        </Grid>
       </Box>
     );
   }

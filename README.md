@@ -6,8 +6,11 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Option to hide face
+- Move center and overlay when window size changed
 - Face centering glitch cutting off top left
+- Drag face exactly, slight error currently
+- Sample gifs and faces
+- Instructions
 - ...
 
 ## Credits

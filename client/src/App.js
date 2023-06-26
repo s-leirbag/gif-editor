@@ -39,6 +39,7 @@ export default class App extends React.Component {
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
       faceCenter: null, // center position on face in pixels
+      gifFacesShown: [], // bool if face shown in each gif image
       gifPositions: [], // position of face on gif images in pixels
       gifFaceScales: [], // compounding scale for face in each gif image
       gifRotations: [], // rotation of face in each gif image
@@ -105,6 +106,7 @@ export default class App extends React.Component {
       // Get gif dimensions
       this.getImgSize(urls[0], (size) => this.setState({
         gifSize: size,
+        gifFacesShown: Array(urls.length).fill(true),
         gifFaceScales: Array(urls.length).fill(1),
         gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
         gifRotations: Array(urls.length).fill(0),
@@ -162,7 +164,7 @@ export default class App extends React.Component {
   }
 
   fetchEditedImg = async (...indexes) => {
-    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifPositions', 'gifRotations', 'gifFaceScales'))
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifFacesShown', 'gifPositions', 'gifRotations', 'gifFaceScales'))
       return;
     
     if (indexes.length === 0)
@@ -176,6 +178,11 @@ export default class App extends React.Component {
     let faceScaleSize = {};
     let newImgsEdited = cloneDeep(this.state.imgsEdited);
     for (let i of indexes) {
+      if (!this.state.gifFacesShown[i]) {
+        newImgsEdited[i] = this.state.imgs[i];
+        continue;
+      }
+
       const scale = this.state.gifFaceScales[i];
       if (faceSize.width / faceSize.height > gifSize.width / gifSize.height) {
         faceScaleSize.width = gifSize.width * scale;
@@ -335,7 +342,7 @@ export default class App extends React.Component {
   }
 
   renderCurImg() {
-    if (this.isAnyVarsNull('gifSize', 'gifPositions')) {
+    if (this.isAnyVarsNull('gifSize', 'gifFacesShown', 'gifPositions', 'gifRotations', 'gifFaceScales')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <Button
@@ -361,15 +368,17 @@ export default class App extends React.Component {
             src={this.state.imgsEdited[curImg]}
             overlay={this.state.overlays[curImg]}
             isOverlayOn={this.state.isOverlayOn}
+            faceShown={this.state.gifFacesShown[curImg]}
             faceScaleSize={this.state.faceScaleSize}
             size={this.state.gifSize}
             pos={this.state.gifPositions[curImg]}
             scale={this.state.gifFaceScales[curImg]}
             rotation={this.state.gifRotations[curImg]}
+            onFaceToggle={(e, c) => this.onImgAttrChange('gifFacesShown', c)}
             onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
             onScaleChange={(scale) => this.onImgAttrChange('gifFaceScales', scale)}
-            onOverlayChange={this.handleIsOverlayOn}
             onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
+            onOverlayChange={this.handleIsOverlayOn}
             disabled={this.state.playIntervalId !== null}
             key={curImg} // jank?
           />
