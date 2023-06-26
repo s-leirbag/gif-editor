@@ -4,6 +4,8 @@ import './FaceCenterer.css'
 import { PositionInput } from './Input.jsx';
 
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
+import Paper from '@mui/material/Paper';
 
 import AddIcon from '@mui/icons-material/Add';
 
@@ -13,52 +15,31 @@ export default class FaceCenterer extends React.Component {
     this.state = {
       screenSize: null,
       screenPos: null,
-      dragStart: null,
     };
     this.imgRef = React.createRef();
   }
 
   componentDidMount() {
-    window.addEventListener("mousedown", this.handleMouseDown);
     window.addEventListener("mouseup", this.handleMouseUp);
     window.addEventListener('resize', this.getScreenSizePos);
   }
   
   componentWillUnmount() {
-    window.removeEventListener("mousedown", this.handleMouseDown);
     window.removeEventListener("mouseup", this.handleMouseUp);
     window.removeEventListener('resize', this.getScreenSizePos);
   }
 
-  handleMouseDown = (e) => {
-    const coord = { x: e.clientX, y: e.clientY };
-    if (this.isInBounds(coord))
-      this.setState({ dragStart: coord });
-  }
-
   handleMouseUp = (e) => {
     const coord = { x: e.clientX, y: e.clientY };
-    if (this.state.dragStart != null && this.isInBounds(coord)) {
+    if (this.isInBounds(coord)) {
       // Get new center
-      const dragStart = this.state.dragStart;
-      let diff = { x: coord.x - dragStart.x, y: coord.y - dragStart.y };
-      diff = this.sizeScreenToActual(diff);
-
-      const pos = this.props.pos;
-      const newPos = { x: Math.round(pos.x + diff.x), y: Math.round(pos.y + diff.y) };
-
-      // make sure the new center isn't too far out of bounds
-      const size = this.props.size;
-      if (newPos.x < 0) newPos.x = 0;
-      if (newPos.y < 0) newPos.y = 0;
-      if (newPos.x > size.width)
-        newPos.x = size.width;
-      if (newPos.y > size.height)
-        newPos.y = size.height;
+      const screenPos = this.state.screenPos;
+      let newPos = { x: coord.x - screenPos.x, y: coord.y - screenPos.y };
+      newPos = this.sizeScreenToActual(newPos);
+      newPos = { x: Math.round(newPos.x), y: Math.round(newPos.y) };
 
       this.props.onCenterChange(newPos);
     }
-    this.setState({ dragStart: null });
   }
 
   isInBounds({x, y}) {
@@ -119,13 +100,29 @@ export default class FaceCenterer extends React.Component {
         y: screenPos.y + this.sizeActualToScreen(this.props.pos).y,
       }
       centerMarker = (
-        <AddIcon
-          sx={{
-            position: 'absolute',
-            top: center.y,
-            left: center.x,
-          }}
-        />
+        <>
+          <Paper
+            sx={{
+              position: 'absolute',
+              top: center.y,
+              left: center.x,
+              transform: 'translate(-50%, -50%)',
+              borderRadius: 100,
+              opacity: 0.3,
+            }}
+            elevation={4}
+          >
+            <IconButton><AddIcon/></IconButton>
+          </Paper>
+          <AddIcon
+            sx={{
+              position: 'absolute',
+              top: center.y,
+              left: center.x,
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
+        </>
       )
     }
 
