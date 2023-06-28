@@ -5,6 +5,7 @@ import FileSaver from 'file-saver';
 
 import FaceCenterer from './Components/FaceCenterer.jsx';
 import ImageEditor from './Components/ImageEditor.jsx';
+import DebugModal from './Components/DebugModal.jsx';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -153,6 +154,11 @@ export default class App extends React.Component {
     zip.generateAsync({ type: "blob" }).then(function (content) {
       FileSaver.saveAs(content, "edited_gif.zip");
     });
+  }
+
+  outputProperties = () => {
+    const { faceCenter, gifFacesShown, gifPositions, gifRotations, gifFaceScales } = this.state;
+    console.log(JSON.stringify({ faceCenter, gifFacesShown, gifPositions, gifRotations, gifFaceScales }));
   }
 
   readFileImgUrls(files, callback) {
@@ -500,6 +506,7 @@ export default class App extends React.Component {
             </Paper>
           </Grid>
         </Grid>
+        <DebugModal onOutputProperties={this.outputProperties} />
       </div>
     );
   }
