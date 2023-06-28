@@ -21,19 +21,19 @@ const style = {
   
 export default function DebugModal(props) {
     const [open, setOpen] = React.useState(false);
-    // const handleOpen = () => setOpen(true);
+    const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
     React.useEffect(() => {
-      window.addEventListener("keydown", handleKeyUp);
+      window.addEventListener("keydown", handleKeyDown);
       return () => {
-        window.removeEventListener("keydown", handleKeyUp);
+        window.removeEventListener("keydown", handleKeyDown);
       };
     }, []);
 
-    const handleKeyUp = (e) => {
+    const handleKeyDown = (e) => {
       if (e.key === 'Escape')
-        setOpen(!open);
+        handleOpen();
     };
 
     return (

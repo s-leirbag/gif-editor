@@ -3,9 +3,11 @@ import './App.css';
 import JSZip from 'jszip';
 import FileSaver from 'file-saver';
 
+import DebugModal from './Components/DebugModal.jsx';
 import FaceCenterer from './Components/FaceCenterer.jsx';
 import ImageEditor from './Components/ImageEditor.jsx';
-import DebugModal from './Components/DebugModal.jsx';
+import UploadButton from './Components/UploadButton.jsx';
+import { sampleGifCounts } from './Constants.js';
 
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -15,12 +17,11 @@ import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+// import Typography from '@mui/material/Typography';
 
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
 import PauseIcon from '@mui/icons-material/Pause';
-import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { cloneDeep } from 'lodash';
 // import { clone, sample, isEmpty } from 'lodash';
@@ -106,38 +107,56 @@ export default class App extends React.Component {
   scrollIntoView = () => this.curImgRef.current.scrollIntoView();
 
   handleFaceUpload = (e) => {
-    this.readFileImgUrls(e.target.files, (urls) => {
-      const img = urls[0];
-      this.setState({ face: img });
-      this.getImgSize(img, (size) => this.setState({
-        faceSize: size,
-        faceCenter: { x: size.width / 2, y: size.height / 2 },
-      }, this.updateAllImages));
-    });
+    this.readFileImgUrls(e.target.files, (urls) => {this.setFace(urls[0])});
   }
 
   handleImagesUpload = async (e) => {
-    this.readFileImgUrls(e.target.files, (urls) => {
-      this.setState({ imgs: urls, imgsEdited: urls, checked: Array(urls.length).fill(false) });
-
-      // Get gif dimensions
-      this.getImgSize(urls[0], (size) => this.setState({
-        gifSize: size,
-        gifFacesShown: Array(urls.length).fill(true),
-        gifFaceScales: Array(urls.length).fill(0.5),
-        gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
-        gifRotations: Array(urls.length).fill(0),
-      }, this.updateAllImages));
-
-      this.setState({ curImg: 0, overlays: [] });
-    });
+    this.readFileImgUrls(e.target.files, this.setImages);
   }
 
   handleOverlaysUpload = (e) => {
-    this.readFileImgUrls(e.target.files, (urls) => {
-      this.setState({ overlays: urls });
-    });
+    this.readFileImgUrls(e.target.files, (overlays) => this.setState({ overlays }));
   }
+
+  handlePickSampleFace = (name) => {
+    this.readLocalAsUri('sample_faces/' + name + '.png')
+      .then(this.setFace);
+  }
+
+  handlePickSampleGif = async (name) => {
+    const path = 'sample_gifs/' + name;
+    const imgs = [];
+    const overlays = [];
+    for (let i = 0; i < sampleGifCounts[name]; i++) {
+      imgs[i] = await this.readLocalAsUri(path + '/images/' + i + '.png');
+      overlays[i] = await this.readLocalAsUri(path + '/overlays/' + i + '.png');
+    }
+    this.setImages(imgs);
+    this.setState({ overlays });
+  }
+
+  setFace = (face) => {
+    this.setState({ face });
+    this.getImgSize(face, (size) => this.setState({
+      faceSize: size,
+      faceCenter: { x: size.width / 2, y: size.height / 2 },
+    }, this.updateAllImages));
+  }
+
+  setImages = (urls) => {
+    this.setState({ imgs: urls, imgsEdited: urls, checked: Array(urls.length).fill(false) });
+
+    // Get gif dimensions
+    this.getImgSize(urls[0], (size) => this.setState({
+      gifSize: size,
+      gifFacesShown: Array(urls.length).fill(true),
+      gifFaceScales: Array(urls.length).fill(0.5),
+      gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
+      gifRotations: Array(urls.length).fill(0),
+    }, this.updateAllImages));
+
+    this.setState({ curImg: 0, overlays: [] });
+  };
 
   handleIsOverlayOn = (e, c) => {
     this.setState({ isOverlayOn: c });
@@ -165,22 +184,29 @@ export default class App extends React.Component {
     if (!files)
       return;
 
-    function readFile(file) {
-      return new Promise(function (resolve, reject) {
-        const fr = new FileReader();
-        fr.onload = function(){ resolve(fr.result) };
-        fr.onerror = function(){ reject(fr) };
-        fr.readAsDataURL(file);
-      });
-    }
-
     // Store promises in array
     let readers = [];
     for(const file of files)
-      readers.push(readFile(file));
+      readers.push(this.readFile(file));
     
     // Trigger Promises
     Promise.all(readers).then(callback);
+  }
+
+  async readLocalAsUri(file) {
+    const response = await fetch(file);
+    const blob = await response.blob();
+    const data = await this.readFile(blob);
+    return data;
+  }
+  
+  readFile(file) {
+    return new Promise(function (resolve, reject) {
+      const fr = new FileReader();
+      fr.onload = function(){ resolve(fr.result) };
+      fr.onerror = function(){ reject(fr) };
+      fr.readAsDataURL(file);
+    });
   }
 
   fetchEditedImg = async (...indexes) => {
@@ -352,14 +378,7 @@ export default class App extends React.Component {
     if (this.isAnyVarsNull('faceSize', 'faceCenter')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <Button
-            component="label"
-            variant="outlined"
-            startIcon={<UploadFileIcon />}
-          >
-            <Typography variant="h6">Upload Face</Typography>
-            <input type="file" accept="image/*" hidden onChange={this.handleFaceUpload} />
-          </Button>
+          <UploadButton type='face' text='Set Face' onUpload={this.handleFaceUpload} onPickSample={this.handlePickSampleFace} disabled={this.state.playIntervalId !== null} />
         </Box>
       );
     }
@@ -371,6 +390,8 @@ export default class App extends React.Component {
           pos={this.state.faceCenter}
           onCenterChange={(center) => this.setState({ faceCenter: center }, this.updateAllImages)}
           onFaceUpload={this.handleFaceUpload}
+          onPickSample={this.handlePickSampleFace}
+          disabled={this.state.playIntervalId !== null}
         />
       );
     }
@@ -380,14 +401,7 @@ export default class App extends React.Component {
     if (this.isAnyVarsNull('gifSize', 'gifFacesShown', 'gifPositions', 'gifRotations', 'gifFaceScales')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <Button
-            component="label"
-            variant="outlined"
-            startIcon={<UploadFileIcon />}
-          >
-            <Typography variant="h6">Upload Images</Typography>
-            <input type="file" accept="image/*" multiple hidden onChange={this.handleImagesUpload} />
-          </Button>
+          <UploadButton type='gif' text='Set Gif Images' onUpload={this.handleImagesUpload} onPickSample={this.handlePickSampleGif} />
         </Box>
       );
     }
@@ -411,6 +425,7 @@ export default class App extends React.Component {
           onOverlayChange={this.handleIsOverlayOn}
           onOverlaysUpload={this.handleOverlaysUpload}
           onImagesUpload={this.handleImagesUpload}
+          onPickSample={this.handlePickSampleGif}
           disabled={this.state.playIntervalId !== null}
           key={curImg} // jank?
         />
@@ -421,32 +436,18 @@ export default class App extends React.Component {
   renderScroll() {
     if (this.state.imgsEdited.length !== 0) {
       let selectButton;
-      if (this.state.checked.every((val) => val === true)) {
-        selectButton = (
-          <Button
-            component="label"
-            variant="outlined"
-            onClick={this.handleUncheckAll}
-            sx={{ borderRadius: 100 }}
-            disabled={this.state.playIntervalId !== null}
-          >
-            Unselect All
-          </Button>
-        );
-      }
-      else {
-        selectButton = (
-          <Button
-            component="label"
-            variant="outlined"
-            onClick={this.handleCheckAll}
-            sx={{ borderRadius: 100 }}
-            disabled={this.state.playIntervalId !== null}
-          >
-            Select All
-          </Button>
-        );
-      }
+      const allChecked = this.state.checked.every((val) => val === true);
+      selectButton = (
+        <Button
+          component="label"
+          variant="outlined"
+          onClick={allChecked ? this.handleUncheckAll : this.handleCheckAll}
+          sx={{ borderRadius: 100 }}
+          disabled={this.state.playIntervalId !== null}
+        >
+          {allChecked ? 'Unselect' : 'Select'} All
+        </Button>
+      );
 
       return <>
         <Stack sx={{ position: 'absolute', zIndex: 2, bottom: 32 }} spacing={2} direction="row" alignItems="center">

@@ -2,15 +2,13 @@ import React from 'react';
 import './ImageEditor.css'
 
 import { PositionInput, InputSlider } from './Input.jsx';
+import UploadButton from './UploadButton';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button'
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
-
-import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 export default class ImageEditor extends React.Component {
   constructor(props) {
@@ -214,43 +212,29 @@ export default class ImageEditor extends React.Component {
         />
       </Stack>
     );
-    let overlayUpload = '';
-    let overlaySwitch = '';
-    overlaySwitch = (
+    let overlaySwitch = (
       <Stack spacing={0.5} direction="row" alignItems="center">
         <Typography variant='h6' component='h6'>Overlay</Typography>
         <Switch
-          checked={this.props.isOverlayOn}
+          checked={this.props.overlay && this.props.isOverlayOn}
           onChange={this.props.onOverlayChange}
           disabled={this.props.disabled || !this.props.overlay}
           color={this.props.disabled || !this.props.overlay ? 'default' : 'primary'}
         />
       </Stack>
     );
-    overlayUpload = (
-      <Box>
-        <Button
-          component="label"
-          variant="outlined"
-          startIcon={<UploadFileIcon />}
-          disabled={this.props.disabled}
-        >
-          <Typography variant="h6">{this.props.overlay ? 'Swap Overlay' : 'Set Overlay'}</Typography>
-          <input type="file" accept="image/*" multiple hidden onChange={this.props.onOverlaysUpload} />
-        </Button>
-      </Box>
-    );
+    let overlayUpload = '';
+    if (!this.props.overlay) {
+      overlayUpload = (
+        <Box>
+          <UploadButton type='overlay' text='Set Overlay' onUpload={this.props.onOverlaysUpload} disabled={this.props.disabled} />
+        </Box>
+      );
+    }
+
     const changeGif = (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-        <Button
-          component="label"
-          variant="outlined"
-          startIcon={<UploadFileIcon />}
-          disabled={this.props.disabled}
-        >
-          <Typography variant="h6">Change Gif</Typography>
-          <input type="file" accept="image/*" multiple hidden onChange={this.props.onImagesUpload} />
-        </Button>
+        <UploadButton type='gif' text='Change Gif' onUpload={this.props.onImagesUpload} onPickSample={this.props.onPickSample} disabled={this.props.disabled} />
       </Box>
     );
 

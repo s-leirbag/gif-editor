@@ -2,16 +2,15 @@ import React from 'react';
 import './FaceCenterer.css'
 
 import { PositionInput } from './Input.jsx';
+import UploadButton from './UploadButton';
 
 import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import AddIcon from '@mui/icons-material/Add';
-import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 export default class FaceCenterer extends React.Component {
   constructor(props) {
@@ -190,15 +189,7 @@ export default class FaceCenterer extends React.Component {
     );
     const changeFace = (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-        <Button
-          component="label"
-          variant="outlined"
-          startIcon={<UploadFileIcon />}
-          disabled={this.props.disabled}
-        >
-          <Typography variant="h6">Change Face</Typography>
-          <input type="file" accept="image/*" hidden onChange={this.props.onFaceUpload} />
-        </Button>
+        <UploadButton type='face' text='Change Face' onUpload={this.props.onFaceUpload} onPickSample={this.props.onPickSample} disabled={this.props.disabled} />
       </Box>
     );
 
