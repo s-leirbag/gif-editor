@@ -6,7 +6,6 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Add default properties to samples
 - Instructions
 - Read and process gif not images
 - Non-png support

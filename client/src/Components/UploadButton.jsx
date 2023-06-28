@@ -100,16 +100,18 @@ export default function UploadButton(props) {
     width: props.type === 'overlay' ? 'auto' : '70vw',
     height: props.type === 'overlay' ? 'auto' : '70vh',
   }
-    
+
   return (
     <div>
       {openButton}
       <Modal
         open={open}
         onClose={handleClose}
+        // Stop propagation to FaceCenterer and ImageEditor
+        onMouseUp={(e) => { e.stopPropagation() }}
       >
         <Box sx={{ ...style, ...size }}>
-          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ height: props.type === 'face' ? 'auto' : '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="h4" component="h2">{props.text}</Typography>
             <Typography variant='h6'>{instructions}</Typography>
             {body}

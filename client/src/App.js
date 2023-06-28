@@ -43,10 +43,10 @@ export default class App extends React.Component {
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
       faceCenter: null, // center position on face in pixels
-      gifFacesShown: [], // bool if face shown in each gif image
-      gifPositions: [], // position of face on gif images in pixels
-      gifFaceScales: [], // compounding scale for face in each gif image
-      gifRotations: [], // rotation of face in each gif image
+      gifFacesShown: null, // bool if face shown in each gif image
+      gifPositions: null, // position of face on gif images in pixels
+      gifFaceScales: null, // compounding scale for face in each gif image
+      gifRotations: null, // rotation of face in each gif image
       playIntervalId: null, // interval for playing gif
     };
     this.curImgRef = React.createRef();
@@ -107,56 +107,78 @@ export default class App extends React.Component {
   scrollIntoView = () => this.curImgRef.current.scrollIntoView();
 
   handleFaceUpload = (e) => {
-    this.readFileImgUrls(e.target.files, (urls) => {this.setFace(urls[0])});
+    this.readFileImgUrls(e.target.files, (urls) => {
+      const face = urls[0];
+      this.setState({ face },
+        () => this.getImgSize(face, (size) => this.setState({
+          faceSize: size,
+          faceCenter: { x: size.width / 2, y: size.height / 2 },
+        }, this.updateAllImages))
+      );
+    });
   }
 
   handleImagesUpload = async (e) => {
-    this.readFileImgUrls(e.target.files, this.setImages);
+    this.readFileImgUrls(e.target.files, (urls) => {
+      this.setState({ curImg: 0, imgs: urls, imgsEdited: urls, overlays: [], checked: Array(urls.length).fill(false) },
+        // Get gif dimensions
+        () => this.getImgSize(urls[0], (size) => this.setState({
+          gifSize: size,
+          gifFacesShown: Array(urls.length).fill(true),
+          gifFaceScales: Array(urls.length).fill(0.5),
+          gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
+          gifRotations: Array(urls.length).fill(0),
+        }, this.updateAllImages))
+      );
+    });
   }
 
   handleOverlaysUpload = (e) => {
     this.readFileImgUrls(e.target.files, (overlays) => this.setState({ overlays }));
   }
 
-  handlePickSampleFace = (name) => {
-    this.readLocalAsUri('sample_faces/' + name + '.png')
-      .then(this.setFace);
+  handlePickSampleFace = async (name) => {
+    const face = await this.readLocalAsUri('sample_faces/' + name + '.png');
+    const faceCenters = await this.readLocalJSON('sample_faces/face_centers.json')
+    this.setState({ face, faceCenter: faceCenters[name] },
+      () => this.getImgSize(face, (size) => this.setState({
+        faceSize: size,
+      }, this.updateAllImages))
+    );
   }
 
   handlePickSampleGif = async (name) => {
     const path = 'sample_gifs/' + name;
+
+    // load images from the sample gif
     const imgs = [];
     const overlays = [];
     for (let i = 0; i < sampleGifCounts[name]; i++) {
       imgs[i] = await this.readLocalAsUri(path + '/images/' + i + '.png');
       overlays[i] = await this.readLocalAsUri(path + '/overlays/' + i + '.png');
     }
-    this.setImages(imgs);
-    this.setState({ overlays });
+
+    // Get default properties
+    const { gifFacesShown, gifPositions, gifRotations, gifFaceScales } = (
+      await this.readLocalJSON(path + '/properties.json')
+    );
+    // const { gifFacesShown, gifPositions, gifRotations, gifFaceScales } = {
+    //   gifFacesShown: Array(imgs.length).fill(true),
+    //   gifFaceScales: Array(imgs.length).fill(0.5),
+    //   gifPositions: Array(imgs.length).fill({ x: 1, y: 1 }),
+    //   gifRotations: Array(imgs.length).fill(0),
+    // }
+
+    this.setState({
+        curImg: 0, imgs, imgsEdited: imgs, overlays, checked: Array(imgs.length).fill(false),
+        gifFacesShown, gifPositions, gifRotations, gifFaceScales 
+      },
+      // Get gif dimensions then update all images
+      () => this.getImgSize(imgs[0], (size) => this.setState({
+        gifSize: size,
+      }, this.updateAllImages))
+    );
   }
-
-  setFace = (face) => {
-    this.setState({ face });
-    this.getImgSize(face, (size) => this.setState({
-      faceSize: size,
-      faceCenter: { x: size.width / 2, y: size.height / 2 },
-    }, this.updateAllImages));
-  }
-
-  setImages = (urls) => {
-    this.setState({ imgs: urls, imgsEdited: urls, checked: Array(urls.length).fill(false) });
-
-    // Get gif dimensions
-    this.getImgSize(urls[0], (size) => this.setState({
-      gifSize: size,
-      gifFacesShown: Array(urls.length).fill(true),
-      gifFaceScales: Array(urls.length).fill(0.5),
-      gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
-      gifRotations: Array(urls.length).fill(0),
-    }, this.updateAllImages));
-
-    this.setState({ curImg: 0, overlays: [] });
-  };
 
   handleIsOverlayOn = (e, c) => {
     this.setState({ isOverlayOn: c });
@@ -178,6 +200,13 @@ export default class App extends React.Component {
   outputProperties = () => {
     const { faceCenter, gifFacesShown, gifPositions, gifRotations, gifFaceScales } = this.state;
     console.log(JSON.stringify({ faceCenter, gifFacesShown, gifPositions, gifRotations, gifFaceScales }));
+  }
+
+  readLocalJSON = async (file) => {
+    const response = await fetch(file);
+    const blob = await response.blob();
+    const text = await blob.text();
+    return JSON.parse(text);
   }
 
   readFileImgUrls(files, callback) {

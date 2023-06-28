@@ -183,7 +183,7 @@ export default class ImageEditor extends React.Component {
       <InputSlider
         name='Scale'
         value={this.props.scale}
-        step={0.05}
+        step={0.025}
         min={0}
         max={2}
         onChange={this.props.onScaleChange}

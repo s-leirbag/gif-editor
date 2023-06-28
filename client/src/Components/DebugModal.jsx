@@ -40,6 +40,8 @@ export default function DebugModal(props) {
       <Modal
         open={open}
         onClose={handleClose}
+        // Stop propagation to FaceCenterer and ImageEditor
+        onMouseUp={(e) => { e.stopPropagation() }}
       >
         <Box sx={style}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
