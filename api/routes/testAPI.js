@@ -14,6 +14,7 @@ const cpUpload = upload.fields([
   { name: 'faceCenter', maxCount: 1 },
   { name: 'facePos', maxCount: 1 },
   { name: 'faceRot', maxCount: 1 },
+  { name: 'faceLayer', maxCount: 1 },
 ])
 router.post("/", cpUpload, async (req, res) => {
   const faceBase64 = req.body.face.split(',')[1];
@@ -27,6 +28,7 @@ router.post("/", cpUpload, async (req, res) => {
   faceCenter = objValsToInts({x: faceCenter.x * ratio, y: faceCenter.y * ratio});
   const facePos = objValsToInts(JSON.parse(req.body.facePos));
   const faceRot = objValsToInts(JSON.parse(req.body.faceRot));
+  const faceLayer = JSON.parse(req.body.faceLayer);
   let face = Buffer.from(faceBase64, 'base64');
   const gifImg = Buffer.from(imgBase64, 'base64');
 
@@ -53,7 +55,10 @@ router.post("/", cpUpload, async (req, res) => {
 
   // Merge images
   face = await resizeCanvas(face, gifSize.width, gifSize.height);
-  face = await sharp(face).composite([{ input: gifImg }]).toBuffer();
+  if (faceLayer === 'back')
+    face = await sharp(face).composite([{ input: gifImg }]).toBuffer();
+  else
+    face = await sharp(gifImg).composite([{ input: face }]).toBuffer();
   
   res.send(bufferToBase64(face));
 });

@@ -8,7 +8,11 @@ import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Switch from '@mui/material/Switch';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
+
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 export default class ImageEditor extends React.Component {
   constructor(props) {
@@ -162,8 +166,9 @@ export default class ImageEditor extends React.Component {
     
     const image = this.renderImage();
 
+    const faceLayer = this.props.faceLayer;
     const disabled = this.props.disabled;
-    const faceShown = this.props.faceShown;
+    const transformButtonsDisabled = disabled || faceLayer === 'hide';
     const screenSize = this.state.screenSize;
     const positionInput = (
       <PositionInput
@@ -176,7 +181,7 @@ export default class ImageEditor extends React.Component {
         maxX={screenSize == null ? 100 : screenSize.width}
         maxY={screenSize == null ? 100 : screenSize.height}
         onChange={this.props.onPosChange}
-        disabled={disabled || !faceShown}
+        disabled={transformButtonsDisabled}
       />
     )
     const scaleSlider = (
@@ -187,7 +192,7 @@ export default class ImageEditor extends React.Component {
         min={0}
         max={2}
         onChange={this.props.onScaleChange}
-        disabled={this.props.disabled || !faceShown}
+        disabled={transformButtonsDisabled}
       />
     );
     const rotateSlider = (
@@ -198,43 +203,53 @@ export default class ImageEditor extends React.Component {
         min={-180}
         max={180}
         onChange={this.props.onRotateChange}
-        disabled={this.props.disabled || !faceShown}
+        disabled={transformButtonsDisabled}
       />
     );
     const faceSwitch = (
       <Stack spacing={0.5} direction="row" alignItems="center">
         <Typography variant='h6' component='h6'>Face</Typography>
-        <Switch
-          checked={this.props.faceShown}
-          onChange={this.props.onFaceToggle}
-          disabled={this.props.disabled}
-          color={this.props.disabled ? 'default' : 'primary'}
-        />
+        <ToggleButtonGroup
+          value={this.props.faceLayer}
+          exclusive
+          onChange={(e, v) => {this.props.onFaceLayerChange(v === null ? this.props.faceLayer : v)}}
+          aria-label='face layer'
+          color={disabled ? 'standard' : 'primary'}
+          disabled={disabled}
+        >
+          {['front', 'back', 'hide'].map((value) => (
+            <ToggleButton value={value} aria-label={value} key={value} sx={{ pt: 0.5, pb: 0.5 }}>
+              {value === 'hide' ? <VisibilityOffIcon /> : value}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
       </Stack>
     );
-    let overlaySwitch = (
-      <Stack spacing={0.5} direction="row" alignItems="center">
-        <Typography variant='h6' component='h6'>Overlay</Typography>
+
+    let overlayButton = '';
+    if (this.props.overlay) {
+      overlayButton = (
         <Switch
           checked={this.props.overlay && this.props.isOverlayOn}
           onChange={this.props.onOverlayChange}
-          disabled={this.props.disabled || !this.props.overlay}
-          color={this.props.disabled || !this.props.overlay ? 'default' : 'primary'}
+          disabled={disabled || !this.props.overlay}
+          color={disabled || !this.props.overlay ? 'default' : 'primary'}
         />
-      </Stack>
-    );
-    let overlayUpload = '';
-    if (!this.props.overlay) {
-      overlayUpload = (
-        <Box>
-          <UploadButton type='overlay' text='Set Overlay' onUpload={this.props.onOverlaysUpload} disabled={this.props.disabled} />
-        </Box>
       );
     }
+    else {
+      overlayButton = <UploadButton type='overlay' text='Set Overlay' onUpload={this.props.onOverlaysUpload} disabled={disabled} />;
+    }
+    const overlayUI = (
+      <Stack spacing={0.5} direction="row" alignItems="center">
+        <Typography variant='h6' component='h6'>Overlay</Typography>
+        {overlayButton}
+      </Stack>
+    )
 
     const changeGif = (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-        <UploadButton type='gif' text='Change Gif' onUpload={this.props.onImagesUpload} onPickSample={this.props.onPickSample} disabled={this.props.disabled} />
+        <UploadButton type='gif' text='Change Gif' onUpload={this.props.onImagesUpload} onPickSample={this.props.onPickSample} disabled={disabled} />
       </Box>
     );
 
@@ -245,16 +260,17 @@ export default class ImageEditor extends React.Component {
           {changeGif}
         </Stack>
         {image}
-        <Grid container columnSpacing={4} sx={{ height: '100%' }}>
-          <Grid item xs={7} sx={{ height: '70%' }}>
+        <Grid container columnSpacing={4} sx={{ height: '100%', mt: 0.5 }}>
+          <Grid item xs={6}>
             {scaleSlider}
             {rotateSlider}
-            {positionInput}
           </Grid>
-          <Grid item xs={5} sx={{ height: '70%' }}>
+          <Grid item xs={6}>
             {faceSwitch}
-            {overlaySwitch}
-            {overlayUpload}
+            {overlayUI}
+          </Grid>
+          <Grid item xs={12}>
+            {positionInput}
           </Grid>
         </Grid>
       </Box>

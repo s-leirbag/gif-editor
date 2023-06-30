@@ -6,6 +6,7 @@ import FileSaver from 'file-saver';
 import DebugModal from './Components/DebugModal.jsx';
 import FaceCenterer from './Components/FaceCenterer.jsx';
 import ImageEditor from './Components/ImageEditor.jsx';
+import InfoModal from './Components/InfoModal.jsx';
 import UploadButton from './Components/UploadButton.jsx';
 import { sampleGifCounts } from './Constants.js';
 
@@ -35,7 +36,7 @@ export default class App extends React.Component {
       imgsEdited: [], // edited images
       curImg: null, // current image the user is editing
       overlays: [], // overlays to help user edit easily
-      isOverlayOn: true,
+      isOverlayOn: false,
       checked: [], // checked images to apply transforms to multiple frames at once
       shiftDown: false, // bool if shift key is down
       commandDown: false, // bool if command key is down
@@ -43,7 +44,7 @@ export default class App extends React.Component {
       faceScaleSize: null, // scaled face size in pixels
       gifSize: null, // gif images size in pixels
       faceCenter: null, // center position on face in pixels
-      gifFacesShown: null, // bool if face shown in each gif image
+      gifFaceLayers: null, // layer of face in each gif image, front/back/hide
       gifPositions: null, // position of face on gif images in pixels
       gifFaceScales: null, // compounding scale for face in each gif image
       gifRotations: null, // rotation of face in each gif image
@@ -124,7 +125,7 @@ export default class App extends React.Component {
         // Get gif dimensions
         () => this.getImgSize(urls[0], (size) => this.setState({
           gifSize: size,
-          gifFacesShown: Array(urls.length).fill(true),
+          gifFaceLayers: Array(urls.length).fill('back'),
           gifFaceScales: Array(urls.length).fill(0.5),
           gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
           gifRotations: Array(urls.length).fill(0),
@@ -159,11 +160,11 @@ export default class App extends React.Component {
     }
 
     // Get default properties
-    const { gifFacesShown, gifPositions, gifRotations, gifFaceScales } = (
+    const { gifFaceLayers, gifPositions, gifRotations, gifFaceScales } = (
       await this.readLocalJSON(path + '/properties.json')
     );
-    // const { gifFacesShown, gifPositions, gifRotations, gifFaceScales } = {
-    //   gifFacesShown: Array(imgs.length).fill(true),
+    // const { gifPositions, gifRotations, gifFaceScales } = {
+    //   gifFaceLayers: Array(imgs.length).fill('back'),
     //   gifFaceScales: Array(imgs.length).fill(0.5),
     //   gifPositions: Array(imgs.length).fill({ x: 1, y: 1 }),
     //   gifRotations: Array(imgs.length).fill(0),
@@ -171,7 +172,7 @@ export default class App extends React.Component {
 
     this.setState({
         curImg: 0, imgs, imgsEdited: imgs, overlays, checked: Array(imgs.length).fill(false),
-        gifFacesShown, gifPositions, gifRotations, gifFaceScales 
+        gifFaceLayers, gifPositions, gifRotations, gifFaceScales 
       },
       // Get gif dimensions then update all images
       () => this.getImgSize(imgs[0], (size) => this.setState({
@@ -198,8 +199,8 @@ export default class App extends React.Component {
   }
 
   outputProperties = () => {
-    const { faceCenter, gifFacesShown, gifPositions, gifRotations, gifFaceScales } = this.state;
-    console.log(JSON.stringify({ faceCenter, gifFacesShown, gifPositions, gifRotations, gifFaceScales }));
+    const { faceCenter, gifFaceLayers, gifPositions, gifRotations, gifFaceScales } = this.state;
+    console.log(JSON.stringify({ faceCenter, gifFaceLayers, gifPositions, gifRotations, gifFaceScales }));
   }
 
   readLocalJSON = async (file) => {
@@ -239,7 +240,7 @@ export default class App extends React.Component {
   }
 
   fetchEditedImg = async (...indexes) => {
-    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifFacesShown', 'gifPositions', 'gifRotations', 'gifFaceScales'))
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifFaceLayers', 'gifPositions', 'gifRotations', 'gifFaceScales'))
       return;
     
     if (indexes.length === 0)
@@ -253,7 +254,7 @@ export default class App extends React.Component {
     let faceScaleSize = {};
     let newImgsEdited = cloneDeep(this.state.imgsEdited);
     for (let i of indexes) {
-      if (!this.state.gifFacesShown[i]) {
+      if (this.state.gifFaceLayers[i] === 'hide') {
         newImgsEdited[i] = this.state.imgs[i];
         continue;
       }
@@ -277,6 +278,7 @@ export default class App extends React.Component {
       data.append('faceCenter', JSON.stringify(faceCenter));
       data.append('facePos', JSON.stringify(this.state.gifPositions[i]));
       data.append('faceRot', JSON.stringify(this.state.gifRotations[i]));
+      data.append('faceLayer', JSON.stringify(this.state.gifFaceLayers[i]));
       
       const response = await fetch('/testAPI', { method: "POST", body: data });
       if (!response.ok) return;
@@ -427,7 +429,7 @@ export default class App extends React.Component {
   }
 
   renderCurImg() {
-    if (this.isAnyVarsNull('gifSize', 'gifFacesShown', 'gifPositions', 'gifRotations', 'gifFaceScales')) {
+    if (this.isAnyVarsNull('gifSize', 'gifFaceLayers', 'gifPositions', 'gifRotations', 'gifFaceScales')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <UploadButton type='gif' text='Set Gif Images' onUpload={this.handleImagesUpload} onPickSample={this.handlePickSampleGif} />
@@ -441,13 +443,13 @@ export default class App extends React.Component {
           src={this.state.imgsEdited[curImg]}
           overlay={this.state.overlays[curImg]}
           isOverlayOn={this.state.isOverlayOn}
-          faceShown={this.state.gifFacesShown[curImg]}
+          faceLayer={this.state.gifFaceLayers[curImg]}
           faceScaleSize={this.state.faceScaleSize}
           size={this.state.gifSize}
           pos={this.state.gifPositions[curImg]}
           scale={this.state.gifFaceScales[curImg]}
           rotation={this.state.gifRotations[curImg]}
-          onFaceToggle={(e, c) => this.onImgAttrChange('gifFacesShown', c)}
+          onFaceLayerChange={(layer) => this.onImgAttrChange('gifFaceLayers', layer)}
           onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
           onScaleChange={(scale) => {if (scale !== 0) this.onImgAttrChange('gifFaceScales', scale)}}
           onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
@@ -537,6 +539,7 @@ export default class App extends React.Component {
           </Grid>
         </Grid>
         <DebugModal onOutputProperties={this.outputProperties} />
+        <InfoModal />
       </div>
     );
   }

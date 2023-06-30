@@ -5,6 +5,7 @@ import { sampleGifs, sampleFaces } from '../Constants.js';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
+import IconButton from '@mui/material/IconButton';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 
@@ -26,17 +27,34 @@ export default function UploadButton(props) {
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
-  const openButton = (
-    <Button
-      component="label"
-      variant="outlined"
-      startIcon={<UploadFileIcon />}
-      onClick={handleOpen}
+  let openButton = '';
+  if (props.type === 'overlay') {
+    openButton = (
+      <IconButton
+        component="label"
+        variant="outlined"
+        color='primary'
+        sx={{ borderRadius: 100 }}
+        onClick={handleOpen}
       disabled={props.disabled}
-    >
-      <Typography variant="h6">{props.text}</Typography>
-    </Button>
-  );
+      >
+        <UploadFileIcon />
+      </IconButton>
+    );
+  }
+  else {
+    openButton = (
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<UploadFileIcon />}
+        onClick={handleOpen}
+        disabled={props.disabled}
+      >
+        <Typography variant="h6">{props.text}</Typography>
+      </Button>
+    );
+  }
 
   const multiple = props.type === 'gif' || props.type === 'overlay';
   const uploadButton = (

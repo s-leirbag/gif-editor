@@ -159,7 +159,7 @@ export default class FaceCenterer extends React.Component {
     return (
       <Box
         className='selectDisable'
-        sx={{ height: '100%', borderColor: 'black', borderWidth: 2, borderStyle: 'solid', pointerEvents: 'none' }}
+        sx={{ height: '100%', borderColor: 'black', borderWidth: 2, borderStyle: 'solid', pointerEvents: 'none', mb: 0.5 }}
       >
         {centerMarker}
         {face}
@@ -176,7 +176,7 @@ export default class FaceCenterer extends React.Component {
     const screenSize = this.state.screenSize;
     const positionInput = (
       <PositionInput
-        name='Center'
+        name='Face Center'
         x={this.props.pos.x}
         y={this.props.pos.y}
         step={1}
