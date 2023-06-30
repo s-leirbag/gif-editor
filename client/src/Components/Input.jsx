@@ -13,35 +13,37 @@ export function PositionInput(props) {
   React.useEffect(() => setY(props.y), [props.y]);
 
   const handleXChange = (event) => {
-    setX(event.target.value === '' ? '' : Number(event.target.value));
-    if (event.target.value !== '') {
-      props.onChange({ x: Number(event.target.value), y: y });
+    const x = event.target.value
+    setX(x === '' ? '' : Number(x));
+    if (x !== '') { 
+      props.onXChange(Number(x));
     }
   };
 
   const handleYChange = (event) => {
-    setY(event.target.value === '' ? '' : Number(event.target.value));
-    if (event.target.value !== '')
-      props.onChange({ x: x, y: Number(event.target.value) });
+    const y = event.target.value
+    setY(y === '' ? '' : Number(y));
+    if (y !== '')
+      props.onYChange(Number(y));
   };
 
   const handleXBlur = () => {
     if (x < props.minX) {
       setX(props.minX);
-      props.onChange({ x: props.minX, y: y });
+      props.onXChange({ x: props.minX, y: y });
     } else if (x > props.maxX) {
       setX(props.maxX);
-      props.onChange({ x: props.maxX, y: y });
+      props.onXChange({ x: props.maxX, y: y });
     }
   };
 
   const handleYBlur = () => {
     if (y < props.minY) {
       setY(props.minY);
-      props.onChange({ x: x, y: props.minY });
+      props.onYChange({ x: x, y: props.minY });
     } else if (y > props.maxY) {
       setY(props.maxY);
-      props.onChange({ x: x, y: props.maxY });
+      props.onYChange({ x: x, y: props.maxY });
     }
   };
 

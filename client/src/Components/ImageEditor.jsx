@@ -54,8 +54,7 @@ export default class ImageEditor extends React.Component {
       let diff = { x: coord.x - dragStart.x, y: coord.y - dragStart.y };
       diff = this.sizeScreenToActual(diff);
 
-      const pos = this.props.pos;
-      const newPos = { x: Math.round(pos.x + diff.x), y: Math.round(pos.y + diff.y) };
+      const newPos = { x: Math.round(this.props.x + diff.x), y: Math.round(this.props.y + diff.y) };
 
       // make sure the new position isn't too far out of bounds
       const faceScaleSize = this.props.faceScaleSize;
@@ -173,14 +172,15 @@ export default class ImageEditor extends React.Component {
     const positionInput = (
       <PositionInput
         name='Position'
-        x={this.props.pos.x}
-        y={this.props.pos.y}
+        x={this.props.x}
+        y={this.props.y}
         step={1}
         minX={0}
         minY={0}
         maxX={screenSize == null ? 100 : screenSize.width}
         maxY={screenSize == null ? 100 : screenSize.height}
-        onChange={this.props.onPosChange}
+        onXChange={this.props.onXChange}
+        onYChange={this.props.onYChange}
         disabled={transformButtonsDisabled}
       />
     )

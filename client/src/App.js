@@ -45,7 +45,8 @@ export default class App extends React.Component {
       gifSize: null, // gif images size in pixels
       faceCenter: null, // center position on face in pixels
       gifFaceLayers: null, // layer of face in each gif image, front/back/hide
-      gifPositions: null, // position of face on gif images in pixels
+      gifXs: null, // x position of face in each gif image
+      gifYs: null, // y position of face in each gif image
       gifFaceScales: null, // compounding scale for face in each gif image
       gifRotations: null, // rotation of face in each gif image
       playIntervalId: null, // interval for playing gif
@@ -127,7 +128,8 @@ export default class App extends React.Component {
           gifSize: size,
           gifFaceLayers: Array(urls.length).fill('back'),
           gifFaceScales: Array(urls.length).fill(0.5),
-          gifPositions: Array(urls.length).fill({ x: parseInt(size.width / 2), y: parseInt(size.height / 2) }),
+          gifXs: Array(urls.length).fill(parseInt(size.width / 2)),
+          gifYs: Array(urls.length).fill(parseInt(size.height / 2)),
           gifRotations: Array(urls.length).fill(0),
         }, this.updateAllImages))
       );
@@ -160,19 +162,30 @@ export default class App extends React.Component {
     }
 
     // Get default properties
-    const { gifFaceLayers, gifPositions, gifRotations, gifFaceScales } = (
+    // const { gifFaceLayers, gifPositions, gifRotations, gifFaceScales } = (
+    //   await this.readLocalJSON(path + '/properties.json')
+    // );
+    // const gifXs = [];
+    // const gifYs = [];
+    // for (const pos of gifPositions) {
+    //   gifXs.push(pos.x);
+    //   gifYs.push(pos.y);
+    // }
+    // console.log(JSON.stringify({gifXs, gifYs}));
+    const { gifFaceLayers, gifXs, gifYs, gifRotations, gifFaceScales } = (
       await this.readLocalJSON(path + '/properties.json')
     );
-    // const { gifPositions, gifRotations, gifFaceScales } = {
+    // const { gifXs, gifYs, gifRotations, gifFaceScales } = {
     //   gifFaceLayers: Array(imgs.length).fill('back'),
     //   gifFaceScales: Array(imgs.length).fill(0.5),
-    //   gifPositions: Array(imgs.length).fill({ x: 1, y: 1 }),
+    //   gifXs: Array(imgs.length).fill(1),
+    //   gifYs: Array(imgs.length).fill(1),
     //   gifRotations: Array(imgs.length).fill(0),
     // }
 
     this.setState({
         curImg: 0, imgs, imgsEdited: imgs, overlays, checked: Array(imgs.length).fill(false),
-        gifFaceLayers, gifPositions, gifRotations, gifFaceScales 
+        gifFaceLayers, gifXs, gifYs, gifRotations, gifFaceScales 
       },
       // Get gif dimensions then update all images
       () => this.getImgSize(imgs[0], (size) => this.setState({
@@ -199,8 +212,8 @@ export default class App extends React.Component {
   }
 
   outputProperties = () => {
-    const { faceCenter, gifFaceLayers, gifPositions, gifRotations, gifFaceScales } = this.state;
-    console.log(JSON.stringify({ faceCenter, gifFaceLayers, gifPositions, gifRotations, gifFaceScales }));
+    const { faceCenter, gifFaceLayers, gifXs, gifYs, gifRotations, gifFaceScales } = this.state;
+    console.log(JSON.stringify({ faceCenter, gifFaceLayers, gifXs, gifYs, gifRotations, gifFaceScales }));
   }
 
   readLocalJSON = async (file) => {
@@ -240,7 +253,7 @@ export default class App extends React.Component {
   }
 
   fetchEditedImg = async (...indexes) => {
-    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifFaceLayers', 'gifPositions', 'gifRotations', 'gifFaceScales'))
+    if (this.isAnyVarsNull('faceSize', 'gifSize', 'faceCenter', 'gifFaceLayers', 'gifXs', 'gifYs', 'gifRotations', 'gifFaceScales'))
       return;
     
     if (indexes.length === 0)
@@ -276,7 +289,7 @@ export default class App extends React.Component {
       data.append('gifSize', JSON.stringify(gifSize));
       data.append('faceScaleSize', JSON.stringify(faceScaleSize));
       data.append('faceCenter', JSON.stringify(faceCenter));
-      data.append('facePos', JSON.stringify(this.state.gifPositions[i]));
+      data.append('facePos', JSON.stringify({ x: this.state.gifXs[i], y: this.state.gifYs[i] }));
       data.append('faceRot', JSON.stringify(this.state.gifRotations[i]));
       data.append('faceLayer', JSON.stringify(this.state.gifFaceLayers[i]));
       
@@ -297,25 +310,44 @@ export default class App extends React.Component {
   onImgAttrChange = (arrayName, val) => {
     const curImg = this.state.curImg;
     if (this.state.checked.every((v) => v === false)) {
-      const newArray = cloneDeep(this.state[arrayName]);
-      newArray[curImg] = val;
-      this.setState({ [arrayName]: newArray }, () => this.fetchEditedImg(curImg));
+      if (arrayName === 'positions') {
+        const newGifXs = cloneDeep(this.state.gifXs);
+        const newGifYs = cloneDeep(this.state.gifYs);
+        newGifXs[curImg] = val.x;
+        newGifYs[curImg] = val.y;
+        this.setState({ gifXs: newGifXs, gifYs: newGifYs }, () => this.fetchEditedImg(curImg));
+      }
+      else {
+        const newArray = cloneDeep(this.state[arrayName]);
+        newArray[curImg] = val;
+        this.setState({ [arrayName]: newArray }, () => this.fetchEditedImg(curImg));
+      }
     }
     else {
       // Check current image
       const newChecked = cloneDeep(this.state.checked);
-      newChecked[this.state.curImg] = true;
+      newChecked[curImg] = true;
       this.setState({ checked: newChecked });
 
       // Get indexes of checked images
       // Aka get indexes of true elements in checked array
       const indexes = newChecked.reduce((a, check, i) => (check ? a.concat(i) : a), []);
 
-      const newArray = cloneDeep(this.state[arrayName]);
-      for (const i of indexes)
-        newArray[i] = val;
-      
-      this.setState({ [arrayName]: newArray }, () => this.fetchEditedImg(...indexes));
+      if (arrayName === 'positions') {
+        const newGifXs = cloneDeep(this.state.gifXs);
+        const newGifYs = cloneDeep(this.state.gifYs);
+        for (const i of indexes) {
+          newGifXs[i] = val.x;
+          newGifYs[i] = val.y;
+        }
+        this.setState({ gifXs: newGifXs, gifYs: newGifYs }, () => this.fetchEditedImg(...indexes));
+      }
+      else {
+        const newArray = cloneDeep(this.state[arrayName]);
+        for (const i of indexes)
+          newArray[i] = val;
+        this.setState({ [arrayName]: newArray }, () => this.fetchEditedImg(...indexes));
+      }
     }
   }
 
@@ -429,7 +461,7 @@ export default class App extends React.Component {
   }
 
   renderCurImg() {
-    if (this.isAnyVarsNull('gifSize', 'gifFaceLayers', 'gifPositions', 'gifRotations', 'gifFaceScales')) {
+    if (this.isAnyVarsNull('gifSize', 'gifFaceLayers', 'gifXs', 'gifYs', 'gifRotations', 'gifFaceScales')) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <UploadButton type='gif' text='Set Gif Images' onUpload={this.handleImagesUpload} onPickSample={this.handlePickSampleGif} />
@@ -446,11 +478,14 @@ export default class App extends React.Component {
           faceLayer={this.state.gifFaceLayers[curImg]}
           faceScaleSize={this.state.faceScaleSize}
           size={this.state.gifSize}
-          pos={this.state.gifPositions[curImg]}
+          x={this.state.gifXs[curImg]}
+          y={this.state.gifYs[curImg]}
           scale={this.state.gifFaceScales[curImg]}
           rotation={this.state.gifRotations[curImg]}
           onFaceLayerChange={(layer) => this.onImgAttrChange('gifFaceLayers', layer)}
-          onPosChange={(pos) => this.onImgAttrChange('gifPositions', pos)}
+          onXChange={(x) => this.onImgAttrChange('gifXs', x)}
+          onYChange={(y) => this.onImgAttrChange('gifYs', y)}
+          onPosChange={(pos) => this.onImgAttrChange('positions', pos)}
           onScaleChange={(scale) => {if (scale !== 0) this.onImgAttrChange('gifFaceScales', scale)}}
           onRotateChange={(deg) => this.onImgAttrChange('gifRotations', deg)}
           onOverlayChange={this.handleIsOverlayOn}
