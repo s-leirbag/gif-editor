@@ -3,6 +3,7 @@ import './ImageEditor.css'
 
 import { PositionInput, InputSlider } from './Input.jsx';
 import UploadButton from './UploadButton';
+import InfoModal from './InfoModal';
 
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
@@ -13,6 +14,21 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+
+const infoModalText =  {
+  title: 'Frame Editor',
+  body: (
+    <Typography variant="body1" component="p">
+      Drag the face around and modify the settings for the frame.
+      <br/><br/>Scale: face size
+      <br/>Rotate: face rotation in degrees
+      <br/>Position: face location on frame
+      <br/>Face layer: front/back/hidden, layer relative to frame
+      <br/>Overlay: guiding image/original gif to help you position, does not appear in final gif
+    </Typography>
+  ),
+  button: 'Got it!',
+}
 
 export default class ImageEditor extends React.Component {
   constructor(props) {
@@ -256,7 +272,7 @@ export default class ImageEditor extends React.Component {
     return (
       <Box sx={{ height: 'calc(100% - 160px)', display: 'flex', flexDirection: 'column' }}>
         <Stack spacing={2} direction="row" alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant='h4' component='h4'>Gif</Typography>
+          <Typography variant='h4' component='h4'>Frame Editor</Typography>
           {changeGif}
         </Stack>
         {image}
@@ -271,6 +287,7 @@ export default class ImageEditor extends React.Component {
           </Grid>
           <Grid item xs={12}>
             {positionInput}
+            <InfoModal hasButton {...infoModalText} width='60%'/>
           </Grid>
         </Grid>
       </Box>

@@ -3,6 +3,7 @@ import './FaceCenterer.css'
 
 import { PositionInput } from './Input.jsx';
 import UploadButton from './UploadButton';
+import InfoModal from './InfoModal';
 
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -11,6 +12,17 @@ import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
 
 import AddIcon from '@mui/icons-material/Add';
+
+const infoModalText = {
+  title: 'Face Editor',
+  body: (
+    <Typography variant="body1" component="p">
+      Set the face center by clicking on the image or entering the coordinates below. This shifts the face on all frames.
+      <br/><br/>When you are done, download your gif in the bottom left corner!
+    </Typography>
+  ),
+  button: 'Got it!',
+}
 
 export default class FaceCenterer extends React.Component {
   constructor(props) {
@@ -196,11 +208,12 @@ export default class FaceCenterer extends React.Component {
     return (
       <Box sx={{ height: 'calc(100% - 80px)', display: 'flex', flexDirection: 'column' }}>
         <Stack spacing={2} direction="row" alignItems="center" sx={{ mb: 1 }}>
-          <Typography variant='h4' component='h4'>Face</Typography>
+          <Typography variant='h4' component='h4'>Face Editor</Typography>
           {changeFace}
         </Stack>
         {face}
         {positionInput}
+        <InfoModal hasButton {...infoModalText}/>
       </Box>
     );
   }

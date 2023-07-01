@@ -18,7 +18,7 @@ import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
 import Stack from '@mui/material/Stack';
-// import Typography from '@mui/material/Typography';
+import Typography from '@mui/material/Typography';
 
 import DownloadIcon from '@mui/icons-material/Download';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -27,11 +27,29 @@ import PauseIcon from '@mui/icons-material/Pause';
 import { cloneDeep } from 'lodash';
 // import { clone, sample, isEmpty } from 'lodash';
 
+const infoModalText = {
+  'welcome': {
+    title: 'Welcome to Gif Editor!',
+    body: 'Are you ready to animate some awesome gifs? Set a face and gif to begin.',
+    button: 'Get started!',
+  },
+  'basics': {
+    title: 'Great! Time to edit.',
+    body: (
+      <Typography variant="body1" component="p">
+        Use the buttons below to move, scale, and rotate your face.
+        <br/><br/>When you are done, download your gif in the bottom left corner!
+      </Typography>
+    ),
+    button: 'Got it!',
+  },
+}
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      infoOpen: true, // bool to open info modal
+      introStage: 0, // stage of info modal, 0: welcome intro, 1: blank, 2: info after setting face & gif, 3: blank
       face: null, // uri of face to edit into iamges
       imgs: [], // original images
       imgsEdited: [], // edited images
@@ -116,7 +134,11 @@ export default class App extends React.Component {
         face,
         faceSize: size,
         faceCenter: { x: size.width / 2, y: size.height / 2 },
-      }, this.updateAllImages));
+      }, () => {
+        this.updateAllImages();
+        if (this.state.introStage === 1 && this.state.imgs.length > 0)
+          this.setState({ introStage: this.state.introStage + 1 });
+      }));
     });
   }
 
@@ -135,7 +157,11 @@ export default class App extends React.Component {
         gifXs: Array(urls.length).fill(parseInt(size.width / 2)),
         gifYs: Array(urls.length).fill(parseInt(size.height / 2)),
         gifRotations: Array(urls.length).fill(0),
-      }, this.updateAllImages))
+      }, () => {
+        this.updateAllImages();
+        if (this.state.introStage === 1 && this.state.face)
+          this.setState({ introStage: this.state.introStage + 1 });
+      }))
     });
   }
 
@@ -148,7 +174,11 @@ export default class App extends React.Component {
     const faceCenters = await this.readLocalJSON('sample_faces/face_centers.json')
     this.getImgSize(face, (faceSize) => this.setState(
       { face, faceCenter: faceCenters[name], faceSize, },
-      this.updateAllImages
+      () => {
+        this.updateAllImages();
+        if (this.state.introStage === 1 && this.state.imgs.length > 0)
+          this.setState({ introStage: this.state.introStage + 1 });
+      }
     ));
   }
 
@@ -188,7 +218,11 @@ export default class App extends React.Component {
       gifRotations,
       gifFaceScales,
       gifSize: size,
-    }, this.updateAllImages));
+    }, () => {
+      this.updateAllImages();
+      if (this.state.introStage === 1 && this.state.face)
+        this.setState({ introStage: this.state.introStage + 1 });
+    }));
   }
 
   handleIsOverlayOn = (e, c) => {
@@ -204,7 +238,7 @@ export default class App extends React.Component {
       zip.file(imgName, img.split(",")[1], { base64: true });
     }
     zip.generateAsync({ type: "blob" }).then(function (content) {
-      FileSaver.saveAs(content, "edited_gif.zip");
+      FileSaver.saveAs(content, "epic_edited_gif.zip");
     });
   }
 
@@ -426,6 +460,14 @@ export default class App extends React.Component {
     );
   }
 
+  renderIntroModal() {
+    const introStage = this.state.introStage;
+    if (introStage === 0)
+      return <InfoModal startOpen {...infoModalText['welcome']} onClose={() => this.setState({ introStage: introStage + 1 })}/>;
+    else if (introStage === 2)
+      return <InfoModal startOpen {...infoModalText['basics']} onClose={() => this.setState({ introStage: introStage + 1 })}/>;
+  }
+
   renderFace() {
     if (this.state.face === null) {
       return (
@@ -504,6 +546,18 @@ export default class App extends React.Component {
         </Button>
       );
 
+      const infoModalText = {
+        title: 'Frames Selection',
+        body: (
+          <Typography variant="body1" component="p">
+            Click a frame to edit it.
+            <br/><br/>You can also select multiple frames by clicking the checkbox in the top right corner of each frame, or by shift/command-clicking.
+            <br/><br/>Play and download your gif in the bottom left corner!
+          </Typography>
+        ),
+        button: 'Got it!',
+      };
+
       return <>
         <Stack sx={{ position: 'absolute', zIndex: 2, bottom: 32 }} spacing={2} direction="row" alignItems="center">
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
@@ -534,11 +588,13 @@ export default class App extends React.Component {
         <Box sx={{ height: '100%', whiteSpace: 'nowrap', overflowX: 'auto', overflowY: 'hidden' }}>
           {this.state.imgsEdited.map((image, index) => (this.renderScrollImg(index)))}
         </Box>
+        <InfoModal hasButton buttonBackground {...infoModalText}/>
       </>
     }
   }
 
   render() {
+    const introModal = this.renderIntroModal();
     const face = this.renderFace();
     const curImg = this.renderCurImg();
     const scroll = this.renderScroll();
@@ -563,7 +619,7 @@ export default class App extends React.Component {
           </Grid>
         </Grid>
         <DebugModal onOutputProperties={this.outputProperties} />
-        <InfoModal open={this.state.infoOpen} />
+        {introModal}
       </div>
     );
   }
