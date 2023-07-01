@@ -20,7 +20,7 @@ const style = {
   };
   
 export default function InfoModal(props) {
-    const [open, setOpen] = React.useState(false);
+    const [open, setOpen] = React.useState(props.open);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
@@ -37,11 +37,14 @@ export default function InfoModal(props) {
               Welcome to Gif Editor!
             </Typography>
             <Typography variant="body1" component="p">
-                This is a tool for creating gifs with faces from your own photos.
+                Are you ready to animate some awesome gifs?
+                Set a face and gif to begin.
             </Typography>
-            <Button variant='outlined' onClick={handleClose} startIcon={<OutputIcon />}>
-              Get started!
-            </Button>
+            <Box>
+              <Button variant='outlined' onClick={handleClose} startIcon={<OutputIcon />}>
+                Get started!
+              </Button>
+            </Box>
           </Box>
         </Box>
       </Modal>
