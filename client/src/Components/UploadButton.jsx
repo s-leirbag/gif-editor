@@ -6,6 +6,7 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
 import Modal from '@mui/material/Modal';
 import Typography from '@mui/material/Typography';
 
@@ -102,7 +103,19 @@ export default function UploadButton(props) {
     body = uploadButton;
   }
   else {
-    instructions = `Upload a ${props.type} or select a sample ${props.type}`;
+    if (props.type === 'face') {
+      instructions = <Typography variant='h6'>Upload a face or select a sample face</Typography>;
+    }
+    else if (props.type === 'gif') {
+      instructions = (
+        <Typography variant='h6'>
+          Upload gif frames or select a sample gif
+          <br/>For custom gifs,
+          use <Link href="https://ezgif.com/" target="_blank" rel="noopener">https://ezgif.com/</Link> to
+          crop, optimize, and split gifs
+        </Typography>
+      );
+    }
     const samples = (props.type === 'gif' ? sampleGifs : sampleFaces).map((name, index) => renderSample(name));
     body = (
       <Grid container spacing={2} sx={{ mt: -1, height: '100%', overflow: 'auto' }}>
@@ -131,7 +144,7 @@ export default function UploadButton(props) {
         <Box sx={{ ...style, ...size }}>
           <Box sx={{ height: props.type === 'face' ? 'auto' : '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="h4" component="h2">{props.text}</Typography>
-            <Typography variant='h6'>{instructions}</Typography>
+            {instructions}
             {body}
           </Box>
         </Box>
