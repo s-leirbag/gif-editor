@@ -37,7 +37,7 @@ const infoModalText = {
     title: 'Great! Time to edit.',
     body: (
       <Typography variant="body1" component="p">
-        Use the buttons below to move, scale, and rotate your face.
+        Drag the face or use buttons to move, scale, and rotate your face.
         <br/><br/>When you are done, download your gif in the bottom left corner!
       </Typography>
     ),
@@ -551,7 +551,7 @@ export default class App extends React.Component {
         body: (
           <Typography variant="body1" component="p">
             Click a frame to edit it.
-            <br/><br/>You can also select multiple frames by clicking the checkbox in the top right corner of each frame, or by shift/command-clicking.
+            <br/><br/>Select multiple frames clicking checkboxes in the top right corner of each frame, or by shift/command-clicking.
             <br/><br/>Play and download your gif in the bottom left corner!
           </Typography>
         ),

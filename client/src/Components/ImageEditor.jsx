@@ -23,7 +23,7 @@ const infoModalText =  {
       <br/><br/>Scale: face size
       <br/>Rotate: face rotation in degrees
       <br/>Position: face location on frame
-      <br/>Face layer: front/back/hidden, layer relative to frame
+      <br/>Face layer: front/back/hidden, layer relative to gif template
       <br/>Overlay: guiding image/original gif to help you position, does not appear in final gif
     </Typography>
   ),

@@ -18,7 +18,6 @@ const infoModalText = {
   body: (
     <Typography variant="body1" component="p">
       Set the face center by clicking on the image or entering the coordinates below. This shifts the face on all frames.
-      <br/><br/>When you are done, download your gif in the bottom left corner!
     </Typography>
   ),
   button: 'Got it!',
