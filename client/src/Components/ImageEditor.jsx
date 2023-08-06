@@ -274,6 +274,7 @@ export default class ImageEditor extends React.Component {
         <Stack spacing={2} direction="row" alignItems="center" sx={{ mb: 1 }}>
           <Typography variant='h4' component='h4'>Frame Editor</Typography>
           {changeGif}
+          <Typography variant='h6' component='h6'>Frame #{this.props.frameNumber}</Typography>
         </Stack>
         {image}
         <Grid container columnSpacing={4} sx={{ height: '100%', mt: 0.5 }}>

@@ -447,9 +447,9 @@ export default class App extends React.Component {
   renderScrollImg(i) {
     // If current image, highlight border
     // And create ref to scroll to image
-    let bgCol, ref;
+    let borderCol, ref;
     if (this.state.curImg === i) {
-      bgCol = 'yellow';
+      borderCol = 'yellow';
       ref = this.curImgRef;
     }
     
@@ -460,7 +460,7 @@ export default class App extends React.Component {
           src={this.state.imgsEdited[i]}
           alt={'image ' + i}
           loading='lazy'
-          sx={{ height: '100%', borderColor: bgCol, borderWidth: 2, borderStyle: 'solid' }}
+          sx={{ height: '100%', borderColor: borderCol, borderWidth: 2, borderStyle: 'solid' }}
           onClick={() => this.handleClickImage(i)}
           ref={ref}
         />
@@ -472,6 +472,37 @@ export default class App extends React.Component {
           }}
         >
           <Checkbox checked={this.state.checked[i]} onChange={(e) => this.handleCheck(i, e)} />
+        </Box>
+
+        <Paper
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            // transform: 'translate(-50%, -50%)',
+            // borderRadius: 100,
+            // opacity: 0.7,
+            // p: 0.5,
+            width: i + 1 < 10 ? 19 : 30,
+            height: 24,
+            borderColor: borderCol,
+            borderWidth: 2,
+            borderStyle: 'solid',
+            borderRadius: 0,
+          }}
+          elevation={0}
+        >
+            
+        </Paper>
+
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 5,
+          }}
+        >
+          {i + 1}
         </Box>
       </Box>
     );
@@ -520,6 +551,7 @@ export default class App extends React.Component {
       const curImg = this.state.curImg;
       return (
         <ImageEditor
+          frameNumber={curImg + 1}
           src={this.state.imgsEdited[curImg]}
           overlay={this.state.overlays[curImg]}
           isOverlayOn={this.state.isOverlayOn}
