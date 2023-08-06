@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import JSZip from 'jszip';
+// import JSZip from 'jszip';
 import FileSaver from 'file-saver';
 
 import DebugModal from './Components/DebugModal.jsx';
@@ -197,6 +197,7 @@ export default class App extends React.Component {
     const { gifFaceLayers, gifXs, gifYs, gifRotations, gifFaceScales } = (
       await this.readLocalJSON(path + '/properties.json')
     );
+    // // For making more sample gifs' default properties
     // const { gifXs, gifYs, gifRotations, gifFaceScales } = {
     //   gifFaceLayers: Array(imgs.length).fill('back'),
     //   gifFaceScales: Array(imgs.length).fill(0.5),
@@ -229,17 +230,33 @@ export default class App extends React.Component {
     this.setState({ isOverlayOn: c });
   }
 
-  handleDownload = (e) => {
-    const zip = new JSZip();
-    const imgsEdited = this.state.imgsEdited;
-    for (let i = 0; i < imgsEdited.length; i++) {
-      const img = imgsEdited[i];
-      const imgName = `img${i}.png`;
-      zip.file(imgName, img.split(",")[1], { base64: true });
-    }
-    zip.generateAsync({ type: "blob" }).then(function (content) {
-      FileSaver.saveAs(content, "epic_edited_gif.zip");
-    });
+  handleDownload = async (e) => {
+    if (this.state.imgs.length === 0)
+      return;
+    
+    // Send frames to server to compile into a single gif file
+    let data = new FormData();
+    data.append('images', JSON.stringify(this.state.imgsEdited));
+    data.append('gifSize', JSON.stringify(this.state.gifSize));
+    
+    const response = await fetch('/imagesToGif', { method: "POST", body: data });
+    if (!response.ok) return;
+    const gifURI = await response.text();
+    
+    // Download gif
+    FileSaver.saveAs(gifURI, "fantastic.gif");
+
+    // // Download zip of frames
+    // const zip = new JSZip();
+    // const imgsEdited = this.state.imgsEdited;
+    // for (let i = 0; i < imgsEdited.length; i++) {
+    //   const img = imgsEdited[i];
+    //   const imgName = `img${i}.png`;
+    //   zip.file(imgName, img.split(",")[1], { base64: true });
+    // }
+    // zip.generateAsync({ type: "blob" }).then(function (content) {
+    //   FileSaver.saveAs(content, "epic_edited_gif.zip");
+    // });
   }
 
   outputProperties = () => {
