@@ -32,8 +32,8 @@ export default function InfoModal(props) {
       button = (
         <div style={{ width: '100%', height: '100%'}}>
           <Paper sx={{ borderRadius: 100, float: 'right', transform: 'translate(0, -100%)' }} elevation={4}>
-            <IconButton>
-              <InfoIcon onClick={handleOpen} />
+            <IconButton onClick={handleOpen}>
+              <InfoIcon />
             </IconButton>
           </Paper>
         </div>
@@ -42,8 +42,8 @@ export default function InfoModal(props) {
     else {
       button = (
         <div style={{ width: '100%', height: '100%'}}>
-          <IconButton sx={{ float: 'right', transform: 'translate(0, -100%)' }}>
-            <InfoIcon onClick={handleOpen} />
+          <IconButton onClick={handleOpen} sx={{ float: 'right', transform: 'translate(0, -100%)' }}>
+            <InfoIcon />
           </IconButton>
         </div>
       );

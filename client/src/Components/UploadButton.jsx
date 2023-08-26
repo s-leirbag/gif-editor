@@ -104,12 +104,16 @@ export default function UploadButton(props) {
   }
   else {
     if (props.type === 'face') {
-      instructions = <Typography variant='h6'>Upload a face or select a sample face</Typography>;
+      instructions = (
+        <Typography variant='h6'>
+          Upload a face or select a sample face (use PNG for transparency)
+        </Typography>
+      );
     }
     else if (props.type === 'gif') {
       instructions = (
         <Typography variant='h6'>
-          Upload gif frames or select a sample gif
+          Upload gif frames or select a sample gif (use PNG for transparency)
           <br/>For custom gifs,
           use <Link href="https://ezgif.com/" target="_blank" rel="noopener">https://ezgif.com/</Link> to
           crop, optimize, and split gifs
@@ -142,7 +146,7 @@ export default function UploadButton(props) {
         onMouseUp={(e) => { e.stopPropagation() }}
       >
         <Box sx={{ ...style, ...size }}>
-          <Box sx={{ height: props.type === 'face' ? 'auto' : '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="h4" component="h2">{props.text}</Typography>
             {instructions}
             {body}

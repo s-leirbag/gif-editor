@@ -6,8 +6,9 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Read and process gif not images
-- Non-png support
+- Tutorials
+- High res options
+- More gifs & faces
 - ...
 
 ## Credits

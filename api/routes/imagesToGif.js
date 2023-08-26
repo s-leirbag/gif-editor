@@ -26,6 +26,7 @@ router.post("/", cpUpload, async (req, res) => {
   gif.setQuality(1);
   // gif-encoder takes in a color to turn transparent in the image for a transparent background
   // I picked a color hopefully not in the image
+  // Alternative: pick a random color each time
   gif.setTransparent(0x1a0902);
   
   // Add each frame to the gif

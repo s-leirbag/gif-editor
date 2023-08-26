@@ -160,6 +160,7 @@ export default class ImageEditor extends React.Component {
             width: screenSize.width, height: screenSize.height, objectFit: 'contain',
             position: 'absolute', top: screenPos.y, left: screenPos.x,
             opacity: 0.3,
+            // opacity: 1,c
           }}
         />
       );

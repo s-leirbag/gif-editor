@@ -174,6 +174,8 @@ export default class App extends React.Component {
     const faceCenters = await this.readLocalJSON('sample_faces/face_centers.json')
     this.getImgSize(face, (faceSize) => this.setState(
       { face, faceCenter: faceCenters[name], faceSize, },
+      // // For making more sample faces' default properties
+      // { face, faceCenter: { x: 0, y: 0 }, faceSize, },
       () => {
         this.updateAllImages();
         if (this.state.introStage === 1 && this.state.imgs.length > 0)
@@ -198,7 +200,7 @@ export default class App extends React.Component {
       await this.readLocalJSON(path + '/properties.json')
     );
     // // For making more sample gifs' default properties
-    // const { gifXs, gifYs, gifRotations, gifFaceScales } = {
+    // const { gifFaceLayers, gifXs, gifYs, gifRotations, gifFaceScales } = {
     //   gifFaceLayers: Array(imgs.length).fill('back'),
     //   gifFaceScales: Array(imgs.length).fill(0.5),
     //   gifXs: Array(imgs.length).fill(1),
@@ -521,6 +523,7 @@ export default class App extends React.Component {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
           <UploadButton type='face' text='Set Face' onUpload={this.handleFaceUpload} onPickSample={this.handlePickSampleFace} disabled={this.state.playIntervalId !== null} />
+          <img src='click-subscribe.gif' alt='click above' width='64' style={{ marginTop: 20 }}/>
         </Box>
       );
     }
@@ -543,7 +546,8 @@ export default class App extends React.Component {
     if (this.state.imgs.length === 0) {
       return (
         <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
-          <UploadButton type='gif' text='Set Gif Images' onUpload={this.handleImagesUpload} onPickSample={this.handlePickSampleGif} />
+          <UploadButton type='gif' text='Set Gif' onUpload={this.handleImagesUpload} onPickSample={this.handlePickSampleGif} />
+          <img src='click-subscribe.gif' alt='click above' width='64' style={{ marginTop: 20 }}/>
         </Box>
       );
     }
