@@ -1,5 +1,6 @@
 import React from 'react';
 
+import InfoModal from './InfoModal';
 import { sampleGifs, sampleFaces } from '../Constants.js';
 
 import Box from '@mui/material/Box';
@@ -8,6 +9,7 @@ import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import Modal from '@mui/material/Modal';
+import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography';
 
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -37,7 +39,7 @@ export default function UploadButton(props) {
         color='primary'
         sx={{ borderRadius: 100 }}
         onClick={handleOpen}
-      disabled={props.disabled}
+        disabled={props.disabled}
       >
         <UploadFileIcon />
       </IconButton>
@@ -57,23 +59,85 @@ export default function UploadButton(props) {
     );
   }
 
+  const renderInfoModal = () => {
+    if (props.type === 'overlay')
+      return '';
+    
+    let infoModalText = '';
+    const imgStyle = { height: '90%', objectFit: 'contain' };
+    if (props.type === 'face') {
+      const renderInfoImage = (name, src) => {
+        return (
+          <Stack direction="column" alignItems="center" sx={{ height: '100%' }}>
+            <Typography variant="h5" component="h5" align='center'>{name}</Typography>
+            <img src={src} alt={src} style={imgStyle} />
+          </Stack>
+        );
+      };
+      const renderInstruction = (description, buttons) => {
+        return (
+          <Stack direction="column" alignItems="center" sx={{ m: 2 }}>
+            <Typography variant="h6" component="h6" align='center'>{description}</Typography>
+            <img src='icons8-arrow-100.png' alt='arrow' />
+            {buttons.map((button) => (
+              <Button variant='outlined' sx={{ p: 1, width: '15vw', height: '100%' }} href={button.url} target="_blank" rel="noopener">
+                <img src={button.src} alt={button.src} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+              </Button>
+            ))}
+          </Stack>
+        );
+      }
+      infoModalText = {
+        title: 'How to Prepare a Face Image',
+        body: (
+          <Box sx={{ mt: 2, mb: 2, height: 'calc(70vh - 192px)', display: 'flex', alignItems: 'center', overflow: 'auto' }}>
+            {renderInfoImage('Original Image', 'the_rock1.jpeg')}
+            {renderInstruction('Remove Background', [{ url: 'https://remove.bg/', src: 'removebg.png' }])}
+            {renderInfoImage('Background Removed', 'the_rock2removebg.png')}
+            {renderInstruction('Erase Body', [{ url: 'https://krita.org/', src: 'krita.jpeg' }, { url: 'https://www.getpaint.net/', src: 'paint.net.png' }])}
+            {renderInfoImage('Head Cutout', 'the_rock3no_body.png')}
+            {renderInstruction('Shrink Image (optional, for speed)', [{ url: 'https://www.simpleimageresizer.com/', src: 'simpleimageresizer.png' }])}
+            {renderInfoImage('Shrunk', 'the_rock4resize.png')}
+          </Box>
+        ),
+        button: 'Got it!',
+      }
+    }
+    else if (props.type === 'gif') {
+      infoModalText = {
+        title: 'How to Prepare a Gif',
+        body: (
+          <Typography variant="body1" component="p">
+            Blahalsdfjhaiowehelloasdiofhhalloawefoi
+          </Typography>
+        ),
+        button: 'Got it!',
+      }
+    }
+    return <InfoModal hasButton width='70vw' height='70vh' {...infoModalText}/>;
+  }
+
   const multiple = props.type === 'gif' || props.type === 'overlay';
+  const infoModal = renderInfoModal();
   const uploadButton = (
-    <Button
-      component="label"
-      variant="outlined"
-      startIcon={<UploadFileIcon />}
-      onClick={handleOpen}
-      sx={props.type === 'overlay' ? {} : { width: '100%', height: '100%' }}
-    >
-      <Typography variant="h6">Upload</Typography>
-      <input type="file" accept="image/*" multiple={multiple} hidden
-        onChange={(e) => {
-          handleClose();
-          props.onUpload(e);
-        }}
-      />
-    </Button>
+    <div style={props.type === 'overlay' ? {} : { width: '100%', height: '100%' }}>
+      <Button
+        component="label"
+        variant="outlined"
+        startIcon={<UploadFileIcon />}
+        onClick={handleOpen}
+        sx={{ width: '100%', height: '100%' }}
+      >
+        <Typography variant="h6">Upload</Typography>
+        <input type="file" accept="image/*" multiple={multiple} hidden
+          onChange={(e) => {
+            handleClose();
+            props.onUpload(e);
+          }}
+        />
+      </Button>
+      {infoModal}
+    </div>
   );
 
   const renderSample = (name) => {
@@ -132,8 +196,8 @@ export default function UploadButton(props) {
   }
 
   const size = {
-    width: props.type === 'overlay' ? 'auto' : '70vw',
-    height: props.type === 'overlay' ? 'auto' : '70vh',
+    width: props.type === 'overlay' ? 'auto' : '80vw',
+    height: props.type === 'overlay' ? 'auto' : '80vh',
   }
 
   return (

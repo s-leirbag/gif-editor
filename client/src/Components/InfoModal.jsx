@@ -59,7 +59,7 @@ export default function InfoModal(props) {
         // Stop propagation to FaceCenterer, ImageEditor, and buttons in the background
         onMouseUp={(e) => { e.stopPropagation() }}
       >
-        <Box sx={{...style, width: props.width || 400 }}>
+        <Box sx={{...style, width: props.width || 400, height: props.height || 'auto' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
             <Typography variant="h4" component="h2">{props.title}</Typography>
             {props.body}
