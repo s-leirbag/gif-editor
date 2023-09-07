@@ -65,28 +65,28 @@ export default function UploadButton(props) {
     
     let infoModalText = '';
     const imgStyle = { height: '90%', objectFit: 'contain' };
+    const renderInfoImage = (name, src) => {
+      return (
+        <Stack direction="column" alignItems="center" sx={{ height: '100%' }} key={name}>
+          <Typography variant="h5" component="h5" align='center'>{name}</Typography>
+          <img src={src} alt={src} style={imgStyle} />
+        </Stack>
+      );
+    };
+    const renderInstruction = (description, buttons) => {
+      return (
+        <Stack direction="column" alignItems="center" sx={{ m: 2 }} key={description}>
+          <Typography variant="h6" component="h6" align='center'>{description}</Typography>
+          <img src='icons8-arrow-100.png' alt='arrow' />
+          {buttons.map((button) => (
+            <Button variant='outlined' sx={{ p: 1, width: '15vw', height: '100%' }} href={button.url} target="_blank" rel="noopener" key={button.src}>
+              <img src={button.src} alt={button.src} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+            </Button>
+          ))}
+        </Stack>
+      );
+    }
     if (props.type === 'face') {
-      const renderInfoImage = (name, src) => {
-        return (
-          <Stack direction="column" alignItems="center" sx={{ height: '100%' }}>
-            <Typography variant="h5" component="h5" align='center'>{name}</Typography>
-            <img src={src} alt={src} style={imgStyle} />
-          </Stack>
-        );
-      };
-      const renderInstruction = (description, buttons) => {
-        return (
-          <Stack direction="column" alignItems="center" sx={{ m: 2 }}>
-            <Typography variant="h6" component="h6" align='center'>{description}</Typography>
-            <img src='icons8-arrow-100.png' alt='arrow' />
-            {buttons.map((button) => (
-              <Button variant='outlined' sx={{ p: 1, width: '15vw', height: '100%' }} href={button.url} target="_blank" rel="noopener">
-                <img src={button.src} alt={button.src} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
-              </Button>
-            ))}
-          </Stack>
-        );
-      }
       infoModalText = {
         title: 'How to Prepare a Face Image',
         body: (
@@ -107,9 +107,13 @@ export default function UploadButton(props) {
       infoModalText = {
         title: 'How to Prepare a Gif',
         body: (
-          <Typography variant="body1" component="p">
-            Blahalsdfjhaiowehelloasdiofhhalloawefoi
-          </Typography>
+          <Box sx={{ mt: 2, mb: 2, height: 'calc(70vh - 192px)', display: 'flex', alignItems: 'center', overflow: 'auto' }}>
+            {renderInfoImage('Original Gif', 'dwight1.gif')}
+            {renderInstruction('Shrink, Crop, Cut', [{ url: 'https://ezgif.com/resize', src: 'ezgif.png' }])}
+            {renderInfoImage('Shrunk & Cropped', 'dwight2ro.gif')}
+            {renderInstruction('Erase Face (optional)', [{ url: 'https://krita.org/', src: 'krita.jpeg' }, { url: 'https://www.getpaint.net/', src: 'paint.net.png' }])}
+            {renderInfoImage('Face Erased', 'dwight3hole.gif')}
+          </Box>
         ),
         button: 'Got it!',
       }
