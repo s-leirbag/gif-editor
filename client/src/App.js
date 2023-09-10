@@ -47,6 +47,28 @@ const infoModalText = {
   },
 }
 
+const superlatives = [
+  "amazing",
+  "awesome",
+  "fantastic",
+  "incredible",
+  "outstanding",
+  "remarkable",
+  "spectacular",
+  "terrific",
+  "wonderful",
+  "extraordinary",
+  "juicy",
+  "spicy",
+  "saucy",
+  "ROTFLOL",
+  "fire",
+  "giffy",
+  "epic",
+  "enjoy your gif-t!",
+  "gif-tastic",
+];
+
 export default class App extends React.Component {
   constructor(props) {
     super(props);
@@ -250,7 +272,8 @@ export default class App extends React.Component {
     const gifURI = await response.text();
     
     // Download gif
-    FileSaver.saveAs(gifURI, "fantastic.gif");
+    const randomSuperlative = superlatives[Math.floor(Math.random() * superlatives.length)];
+    FileSaver.saveAs(gifURI, `${randomSuperlative} gif.gif`);
     this.setState({ isDownloadOpen: false });
 
     // // Download zip of frames

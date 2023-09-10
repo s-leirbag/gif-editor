@@ -8,8 +8,8 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 - High res options
 - More gifs & faces
-- Frame highlight bigger border/extra border instead of faint yellow
 - Themes
+- Comment code
 - ...
 
 ## Credits
