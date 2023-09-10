@@ -8,8 +8,8 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 - High res options
 - More gifs & faces
-- Themes
 - Export/import/save properties and gifs
+- Crowdsourcing database
 - Feature to flip face left/right
 - ...
 
@@ -20,7 +20,7 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 [Express](https://expressjs.com/)  
 [Create React App](https://github.com/facebook/create-react-app)  
 [Material UI](https://mui.com/)  
-[Doge](https://i.imgur.com/AOVMsp7b.jpg)  
-[Arrow icon](https://icons8.com)
-[BeFunky Collage Maker for Gif Tutorial](https://www.befunky.com/)
+[Arrow icon](https://icons8.com)  
+[BeFunky Collage Maker](https://www.befunky.com/)  
+Various Images and Gifs—Internet  
 God
