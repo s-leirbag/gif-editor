@@ -10,6 +10,7 @@ import Typography from '@mui/material/Typography';
 import InfoIcon from '@mui/icons-material/Info';
 import OutputIcon from '@mui/icons-material/Output';
 
+// Style for modal
 const style = {
   position: 'absolute',
   top: '50%',
@@ -20,15 +21,21 @@ const style = {
   boxShadow: 24,
   p: 4,
 };
-  
+
+/**
+ * Modal for welcome text, editor section description, etc.
+ * Optional info icon button to open the modal.
+ */
 export default function InfoModal(props) {
   const [open, setOpen] = React.useState(props.startOpen);
   const handleOpen = () => setOpen(true);
   const handleClose = () => { setOpen(false); if (props.onClose) props.onClose(); }
 
+  // Optional info icon button to open modal
   let button = '';
   if (props.hasButton) {
     if (props.buttonBackground) {
+      // Use paper to add a background to the button
       button = (
         <div style={{ width: '100%', height: '100%'}}>
           <Paper sx={{ borderRadius: 100, float: 'right', transform: 'translate(0, -100%)' }} elevation={4}>
@@ -40,6 +47,7 @@ export default function InfoModal(props) {
       );
     }
     else {
+      // Flat, no background
       button = (
         <div style={{ width: '100%', height: '100%'}}>
           <IconButton onClick={handleOpen} sx={{ float: 'right', transform: 'translate(0, -100%)' }}>

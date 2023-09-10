@@ -7,6 +7,7 @@ import Typography from '@mui/material/Typography';
 
 import OutputIcon from '@mui/icons-material/Output';
 
+// Style for modal
 const style = {
   position: 'absolute',
   top: '50%',

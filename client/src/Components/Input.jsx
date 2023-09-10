@@ -5,6 +5,9 @@ import Input from '@mui/material/Input';
 import Slider from '@mui/material/Slider';
 import Typography from '@mui/material/Typography';
 
+/**
+ * Position input with x and y boxes and increment/decrement arrows
+ */
 export function PositionInput(props) {
   const [x, setX] = React.useState(props.x);
   const [y, setY] = React.useState(props.y);
@@ -96,6 +99,9 @@ export function PositionInput(props) {
   );
 }
 
+/**
+ * Slider input with label and number input box
+ */
 export function InputSlider(props) {
   const [value, setValue] = React.useState(props.value);
 

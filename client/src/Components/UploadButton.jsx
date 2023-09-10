@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
+// Style for modal
 const style = {
   position: 'absolute',
   top: '50%',
@@ -24,13 +25,19 @@ const style = {
   p: 4,
 };
 
+/**
+ * Button to upload face/gif/overlay
+ * Or to select a sample from a gallery
+ */
 export default function UploadButton(props) {
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
+  // Button to upload
   let openButton = '';
   if (props.type === 'overlay') {
+    // For overlay, use small icon button
     openButton = (
       <IconButton
         component="label"
@@ -45,6 +52,7 @@ export default function UploadButton(props) {
     );
   }
   else {
+    // For face/gif, use large labeled button
     openButton = (
       <Button
         component="label"
@@ -58,11 +66,12 @@ export default function UploadButton(props) {
     );
   }
 
+  // Info modal with description of how to prepare face/gif for upload
   const renderInfoModal = () => {
     if (props.type === 'overlay')
       return '';
     
-    let infoModalText = '';
+    // Image with title
     const imgStyle = { height: '90%', objectFit: 'contain' };
     const renderInfoImage = (name, src) => {
       return (
@@ -72,6 +81,8 @@ export default function UploadButton(props) {
         </Stack>
       );
     };
+
+    // Instruction step with title, arrow, and buttons to websites for tools
     const renderInstruction = (description, buttons) => {
       return (
         <Stack direction="column" alignItems="center" sx={{ m: 2 }} key={description}>
@@ -85,6 +96,9 @@ export default function UploadButton(props) {
         </Stack>
       );
     }
+
+    // Info modal content
+    let infoModalText = '';
     if (props.type === 'face') {
       infoModalText = {
         title: 'How to Prepare a Face Image',
@@ -122,6 +136,7 @@ export default function UploadButton(props) {
     return <InfoModal hasButton width='70vw' height='70vh' {...infoModalText}/>;
   }
 
+  // Button to upload custom face/gif/overlay
   const multiple = props.type === 'gif' || props.type === 'overlay';
   const infoModal = renderInfoModal();
   const uploadButton = (
@@ -145,6 +160,7 @@ export default function UploadButton(props) {
     </div>
   );
 
+  // Render a sample face/gif in the gallery
   const renderSample = (name) => {
     return (
       <Grid item xs={3} key={name}>
@@ -169,9 +185,11 @@ export default function UploadButton(props) {
   let instructions = '';
   let body = '';
   if (props.type === 'overlay') {
+    // No instructions or anything for overlay
     body = uploadButton;
   }
   else {
+    // Short instructions at the top of the modal
     if (props.type === 'face') {
       instructions = (
         <Typography variant='h6'>
@@ -186,7 +204,11 @@ export default function UploadButton(props) {
         </Typography>
       );
     }
+
+    // Gallery of sample faces/gifs
     const samples = (props.type === 'gif' ? sampleGifs : sampleFaces).map((name, index) => renderSample(name));
+
+    // Render upload button and gallery
     body = (
       <Grid container spacing={2} sx={{ mt: -1, height: '100%', overflow: 'auto' }}>
         <Grid item xs={3} key={'upload'}>
