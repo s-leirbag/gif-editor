@@ -195,7 +195,9 @@ export default class FaceCenterer extends React.Component {
         minY={0}
         maxX={screenSize == null ? 100 : screenSize.width}
         maxY={screenSize == null ? 100 : screenSize.height}
-        onChange={this.props.onCenterChange}
+        onXChange={(x) => this.props.onCenterChange({ x: x, y: this.props.pos.y })}
+        onYChange={(y) => this.props.onCenterChange({ x: this.props.pos.x, y: y })}
+        disabled={this.props.disabled}
       />
     );
     const changeFace = (
