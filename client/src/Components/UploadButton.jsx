@@ -7,7 +7,6 @@ import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
-import Link from '@mui/material/Link';
 import Modal from '@mui/material/Modal';
 import Stack from '@mui/material/Stack'
 import Typography from '@mui/material/Typography';
@@ -96,7 +95,7 @@ export default function UploadButton(props) {
             {renderInfoImage('Background Removed', 'the_rock2removebg.png')}
             {renderInstruction('Erase Body', [{ url: 'https://krita.org/', src: 'krita.jpeg' }, { url: 'https://www.getpaint.net/', src: 'paint.net.png' }])}
             {renderInfoImage('Head Cutout', 'the_rock3no_body.png')}
-            {renderInstruction('Shrink Image (optional, for speed)', [{ url: 'https://www.simpleimageresizer.com/', src: 'simpleimageresizer.png' }])}
+            {renderInstruction('Shrink Image (for speed)', [{ url: 'https://www.simpleimageresizer.com/', src: 'simpleimageresizer.png' }])}
             {renderInfoImage('Shrunk', 'the_rock4resize.png')}
           </Box>
         ),
@@ -109,10 +108,12 @@ export default function UploadButton(props) {
         body: (
           <Box sx={{ mt: 2, mb: 2, height: 'calc(70vh - 192px)', display: 'flex', alignItems: 'center', overflow: 'auto' }}>
             {renderInfoImage('Original Gif', 'dwight1.gif')}
-            {renderInstruction('Shrink, Crop, Cut', [{ url: 'https://ezgif.com/resize', src: 'ezgif.png' }])}
+            {renderInstruction('Shrink, Crop, Cut (recommended)', [{ url: 'https://ezgif.com/resize', src: 'ezgif.png' }])}
             {renderInfoImage('Shrunk & Cropped', 'dwight2ro.gif')}
+            {renderInstruction('Split Frames (required)', [{ url: 'https://ezgif.com/split', src: 'ezgif.png' }])}
+            {renderInfoImage('Frames Split', 'dwight3split.jpeg')}
             {renderInstruction('Erase Face (optional)', [{ url: 'https://krita.org/', src: 'krita.jpeg' }, { url: 'https://www.getpaint.net/', src: 'paint.net.png' }])}
-            {renderInfoImage('Face Erased', 'dwight3hole.gif')}
+            {renderInfoImage('Face Erased', 'dwight4hole.gif')}
           </Box>
         ),
         button: 'Got it!',
@@ -181,10 +182,7 @@ export default function UploadButton(props) {
     else if (props.type === 'gif') {
       instructions = (
         <Typography variant='h6'>
-          Upload gif frames or select a sample gif (use PNG for transparency)
-          <br/>For custom gifs,
-          use <Link href="https://ezgif.com/" target="_blank" rel="noopener">https://ezgif.com/</Link> to
-          crop, optimize, and split gifs
+          Upload gif frames or select a sample gif
         </Typography>
       );
     }

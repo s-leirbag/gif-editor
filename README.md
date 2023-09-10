@@ -6,12 +6,12 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Tutorials
 - Progress bar
 - Show gif when downloading
 - High res options
 - More gifs & faces
 - Frame highlight bigger border/extra border instead of faint yellow
+- Themes
 - ...
 
 ## Credits
@@ -22,5 +22,6 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 [Create React App](https://github.com/facebook/create-react-app)  
 [Material UI](https://mui.com/)  
 [Doge](https://i.imgur.com/AOVMsp7b.jpg)  
-[Arrow icon](https://icons8.com")
+[Arrow icon](https://icons8.com)
+[BeFunky Collage Maker for Gif Tutorial](https://www.befunky.com/)
 God
