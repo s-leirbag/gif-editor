@@ -6,8 +6,6 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 
 ## To-do
 
-- Progress bar
-- Show gif when downloading
 - High res options
 - More gifs & faces
 - Frame highlight bigger border/extra border instead of faint yellow

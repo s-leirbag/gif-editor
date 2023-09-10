@@ -11,9 +11,11 @@ import UploadButton from './Components/UploadButton.jsx';
 import { sampleGifCounts } from './Constants.js';
 
 import CssBaseline from '@mui/material/CssBaseline';
+import Backdrop from '@mui/material/Backdrop';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
+import CircularProgress from '@mui/material/CircularProgress';
 import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Paper from '@mui/material/Paper';
@@ -69,6 +71,7 @@ export default class App extends React.Component {
       gifFaceScales: null, // compounding scale for face in each gif image
       gifRotations: null, // rotation of face in each gif image
       playIntervalId: null, // interval for playing gif
+      isDownloadOpen: false, // bool if download backdrop is open
     };
     this.curImgRef = React.createRef();
   }
@@ -233,6 +236,7 @@ export default class App extends React.Component {
   }
 
   handleDownload = async (e) => {
+    this.setState({ isDownloadOpen: true });
     if (this.state.imgs.length === 0)
       return;
     
@@ -247,6 +251,7 @@ export default class App extends React.Component {
     
     // Download gif
     FileSaver.saveAs(gifURI, "fantastic.gif");
+    this.setState({ isDownloadOpen: false });
 
     // // Download zip of frames
     // const zip = new JSZip();
@@ -624,15 +629,24 @@ export default class App extends React.Component {
             </IconButton>
           </Paper>
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
-            <IconButton
-              component="label"
-              variant="outlined"
-              onClick={this.handleDownload}
-              sx={{ borderRadius: 100 }}
-              disabled={this.state.playIntervalId !== null}
-            >
-              <DownloadIcon color={this.state.playIntervalId ? 'default' : 'primary'} />
-            </IconButton>
+            <div>
+              <IconButton
+                component="label"
+                variant="outlined"
+                onClick={this.handleDownload}
+                sx={{ borderRadius: 100 }}
+                disabled={this.state.playIntervalId !== null}
+              >
+                <DownloadIcon color={this.state.playIntervalId ? 'default' : 'primary'} />
+              </IconButton>
+              <Backdrop
+                sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                open={this.state.isDownloadOpen}
+                onClick={() => { this.setState({ isDownloadOpen: false }) }}
+              >
+                <CircularProgress color="inherit" />
+              </Backdrop>
+            </div>
           </Paper>
           <Paper sx={{ borderRadius: 100 }} elevation={4}>
             {selectButton}
