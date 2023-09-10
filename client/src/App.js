@@ -385,16 +385,18 @@ export default class App extends React.Component {
     }
     this.setState({ faceScaleSize });
     this.setState({ imgsEdited: newImgsEdited });
+    this.setIsLoading(false);
   }
 
   updateAllImages = () => {
     this.fetchEditedImg(...this.state.imgs.keys());
-    this.setIsLoading(false);
   }
 
   // Update current image
   // And update checked images also if other images are checked
   onImgAttrChange = (arrayName, val) => {
+    this.setIsLoading(true);
+
     const curImg = this.state.curImg;
     if (this.state.checked.every((v) => v === false)) {
       if (arrayName === 'positions') {
@@ -570,7 +572,7 @@ export default class App extends React.Component {
           src={this.state.face}
           size={this.state.faceSize}
           pos={this.state.faceCenter}
-          onCenterChange={(center) => this.setState({ faceCenter: center }, this.updateAllImages)}
+          onCenterChange={(center) => { this.setIsLoading(true); this.setState({ faceCenter: center }, this.updateAllImages) }}
           onFaceUpload={this.handleFaceUpload}
           onPickSample={this.handlePickSampleFace}
           disabled={this.state.playIntervalId !== null}
