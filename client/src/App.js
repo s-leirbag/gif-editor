@@ -472,7 +472,7 @@ export default class App extends React.Component {
       data.append('faceRot', JSON.stringify(this.state.gifRotations[i]));
       data.append('faceLayer', JSON.stringify(this.state.gifFaceLayers[i]));
       
-      const response = await fetch('/testAPI', { method: "POST", body: data });
+      const response = await fetch('/editImage', { method: "POST", body: data });
       if (!response.ok) {
         // Stop loading circle
         this.setIsLoading(false);

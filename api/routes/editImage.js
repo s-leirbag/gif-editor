@@ -5,6 +5,7 @@ const sharp = require('sharp');
 const storage = multer.memoryStorage()
 const upload = multer({ storage: storage })
 
+// Upload fields
 const cpUpload = upload.fields([
   { name: 'face', maxCount: 1 },
   { name: 'image', maxCount: 1 },
@@ -16,7 +17,10 @@ const cpUpload = upload.fields([
   { name: 'faceRot', maxCount: 1 },
   { name: 'faceLayer', maxCount: 1 },
 ])
+
+// POST /api/editImage
 router.post("/", cpUpload, async (req, res) => {
+  // Parse data from request
   const faceBase64 = req.body.face.split(',')[1];
   const imgBase64 = req.body.image.split(',')[1];
   const faceSize = JSON.parse(req.body.faceSize);
@@ -33,10 +37,12 @@ router.post("/", cpUpload, async (req, res) => {
   const gifImg = Buffer.from(imgBase64, 'base64');
 
   if (faceScaleSize.width === 0 || faceScaleSize.height === 0) {
+    // Return image with no face if face scaled down to 0
     res.send(req.body.image);
     return;
   }
 
+  // Scale original face image to scaled size using nearest neighbor
   face = await resize(face, faceScaleSize.width, faceScaleSize.height, sharp.kernel.nearest);
 
   // Rotate
@@ -53,7 +59,7 @@ router.post("/", cpUpload, async (req, res) => {
     parseInt(facePos.y - rotatedFC.y),
   );
 
-  // Merge images
+  // Merge face and image
   face = await resizeCanvas(face, gifSize.width, gifSize.height);
   if (faceLayer === 'back')
     face = await sharp(face).composite([{ input: gifImg }]).toBuffer();
@@ -63,6 +69,11 @@ router.post("/", cpUpload, async (req, res) => {
   res.send(bufferToBase64(face));
 });
 
+/**
+ * Math helper functions
+ */
+
+// Parse all values in an object to integers
 objValsToInts = (obj) => {
   for (const key in obj)
     obj[key] = parseInt(obj[key]);
@@ -91,10 +102,17 @@ rotateVector = (vec, ang) => {
   };
 };
 
+/**
+ * Sharp/Image helper functions
+ * To make code more readable
+ */
+
 transparent = { r: 0, g: 0, b: 0, alpha: 0 };
 
+// Add base64 header to buffer
 bufferToBase64 = (buffer) => 'data:image/png;base64,' + buffer.toString('base64');
 
+// Make blank RBGA png
 createPng = async (width, height) => {
   return await sharp({
     create: {
@@ -106,6 +124,7 @@ createPng = async (width, height) => {
   }).png().toBuffer();
 }
 
+// Get image size
 getSize = async (img) => {
   const metadata = await sharp(img).metadata();
   const width = metadata.width;
@@ -113,6 +132,7 @@ getSize = async (img) => {
   return { width, height };
 }
 
+// Resize image using a certain sample method
 resize = async (img, width, height, sampleMethod) => {
   return await sharp(img).resize(width, height, {
     kernel: sampleMethod,
@@ -123,6 +143,11 @@ rotate = async (img, deg) => {
   return await sharp(img).rotate(deg, { background: transparent }).toBuffer();
 }
 
+/**
+ * Translate image on canvas
+ * Keep the same canvas size using cropping/extending
+ * Can translate off of the canvas to have a blank result
+ */
 translate = async (img, x, y) => {
   const { width, height } = await getSize(img);
   const extract = {
@@ -144,6 +169,7 @@ translate = async (img, x, y) => {
   return await sharp(img).extract(extract).extend(extend).toBuffer();
 }
 
+// Resize canvas to a certain size
 resizeCanvas = async (img, newWidth, newHeight) => {
   const metadata = await sharp(img).metadata();
   const width = metadata.width;
