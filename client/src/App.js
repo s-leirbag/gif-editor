@@ -93,7 +93,7 @@ export default class App extends React.Component {
       gifFaceScales: null, // compounding scale for face in each gif image
       gifRotations: null, // rotation of face in each gif image
       playIntervalId: null, // interval for playing gif
-      isDownloadOpen: false, // bool if download backdrop is open
+      isLoading: false, // bool if loading backdrop is open
     };
     this.curImgRef = React.createRef();
   }
@@ -109,10 +109,10 @@ export default class App extends React.Component {
   }
 
   handleKeyDown = (event) => {
-    if (event.key === 'Shift')
-      this.setState({ shiftDown: true });
-    if (event.key === 'Meta')
-      this.setState({ commandDown: true });
+    // if (event.key === 'Shift')
+    //   this.setState({ shiftDown: true });
+    // if (event.key === 'Meta')
+    //   this.setState({ commandDown: true });
 
     if (this.state.imgs.length === 0)
       return;
@@ -126,11 +126,13 @@ export default class App extends React.Component {
   }
 
   handleKeyUp = (event) => {
-    if (event.key === 'Shift')
-      this.setState({ shiftDown: false });
-    if (event.key === 'Meta')
-      this.setState({ commandDown: false });
+    // if (event.key === 'Shift')
+    //   this.setState({ shiftDown: false });
+    // if (event.key === 'Meta')
+    //   this.setState({ commandDown: false });
   }
+
+  setIsLoading = (isLoading) => this.setState({ isLoading });
 
   handlePlayPause = (event) => {
     if (this.state.playIntervalId) {
@@ -153,6 +155,7 @@ export default class App extends React.Component {
   scrollIntoView = () => this.curImgRef.current.scrollIntoView();
 
   handleFaceUpload = (e) => {
+    this.setIsLoading(true);
     this.readFileImgUrls(e.target.files, (urls) => {
       const face = urls[0];
       this.getImgSize(face, (size) => this.setState({
@@ -168,6 +171,7 @@ export default class App extends React.Component {
   }
 
   handleImagesUpload = async (e) => {
+    this.setIsLoading(true);
     this.readFileImgUrls(e.target.files, (urls) => {
       // Get gif dimensions
       this.getImgSize(urls[0], (size) => this.setState({
@@ -191,16 +195,19 @@ export default class App extends React.Component {
   }
 
   handleOverlaysUpload = (e) => {
+    this.setIsLoading(true);
     this.readFileImgUrls(e.target.files, (overlays) => this.setState({ overlays }));
   }
 
   handlePickSampleFace = async (name) => {
+    this.setIsLoading(true);
     const face = await this.readLocalAsUri('sample_faces/' + name + '.png');
     const faceCenters = await this.readLocalJSON('sample_faces/face_centers.json')
     this.getImgSize(face, (faceSize) => this.setState(
       { face, faceCenter: faceCenters[name], faceSize, },
       // // For making more sample faces' default properties
       // { face, faceCenter: { x: 0, y: 0 }, faceSize, },
+
       () => {
         this.updateAllImages();
         if (this.state.introStage === 1 && this.state.imgs.length > 0)
@@ -210,6 +217,7 @@ export default class App extends React.Component {
   }
 
   handlePickSampleGif = async (name) => {
+    this.setIsLoading(true);
     const path = 'sample_gifs/' + name;
 
     // load images from the sample gif
@@ -258,7 +266,7 @@ export default class App extends React.Component {
   }
 
   handleDownload = async (e) => {
-    this.setState({ isDownloadOpen: true });
+    this.setIsLoading(true);
     if (this.state.imgs.length === 0)
       return;
     
@@ -274,7 +282,7 @@ export default class App extends React.Component {
     // Download gif
     const randomSuperlative = superlatives[Math.floor(Math.random() * superlatives.length)];
     FileSaver.saveAs(gifURI, `${randomSuperlative} gif.gif`);
-    this.setState({ isDownloadOpen: false });
+    this.setIsLoading(false);
 
     // // Download zip of frames
     // const zip = new JSZip();
@@ -381,6 +389,7 @@ export default class App extends React.Component {
 
   updateAllImages = () => {
     this.fetchEditedImg(...this.state.imgs.keys());
+    this.setIsLoading(false);
   }
 
   // Update current image
@@ -664,8 +673,8 @@ export default class App extends React.Component {
               </IconButton>
               <Backdrop
                 sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                open={this.state.isDownloadOpen}
-                onClick={() => { this.setState({ isDownloadOpen: false }) }}
+                open={this.state.isLoading}
+                onClick={() => this.setIsLoading(false)}
               >
                 <CircularProgress color="inherit" />
               </Backdrop>
