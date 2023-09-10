@@ -10,7 +10,8 @@ I wanted to make it easier to photoshop my friend's face into gifs!
 - More gifs & faces
 - Themes
 - Comment code
-- Save properties for future use/different presets
+- Export/import/save properties and gifs
+- Feature to flip face left/right
 - ...
 
 ## Credits

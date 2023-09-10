@@ -8,17 +8,21 @@ import Typography from '@mui/material/Typography';
 import OutputIcon from '@mui/icons-material/Output';
 
 const style = {
-    position: 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-  };
-  
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 400,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+};
+
+/**
+ * Modal for debugging purposes
+ * Currently for outputting gif properties when making new sample gifs and their property presets
+ */
 export default function DebugModal(props) {
     const [open, setOpen] = React.useState(false);
     const handleOpen = () => setOpen(true);

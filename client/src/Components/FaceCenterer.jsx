@@ -13,6 +13,7 @@ import Typography from '@mui/material/Typography';
 
 import AddIcon from '@mui/icons-material/Add';
 
+// Text for the info popup
 const infoModalText = {
   title: 'Face Editor',
   body: (
@@ -23,13 +24,21 @@ const infoModalText = {
   button: 'Got it!',
 }
 
+/**
+ * FaceCenterer
+ * Display face
+ * Change face center/anchor for all frames
+ * Click on face with mouse or use input boxes
+ */
 export default class FaceCenterer extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      // face image size and position on user's screen
       screenSize: null,
       screenPos: null,
     };
+    // Ref to face image for getting size and position on screen
     this.imgRef = React.createRef();
   }
 
@@ -43,6 +52,7 @@ export default class FaceCenterer extends React.Component {
     window.removeEventListener('resize', this.getScreenSizePos);
   }
 
+  // Set face center using mouse
   handleMouseUp = (e) => {
     const coord = { x: e.clientX, y: e.clientY };
     if (this.isInBounds(coord)) {
@@ -62,6 +72,8 @@ export default class FaceCenterer extends React.Component {
     }
   }
 
+  // Util
+
   getCenter = ({ width, height }) => {
     return { x: width / 2, y: height / 2 };
   }
@@ -74,6 +86,11 @@ export default class FaceCenterer extends React.Component {
     return { x: vec1.x - vec2.x, y: vec1.y - vec2.y };
   }
 
+  /**
+   * Check if the [mouse] position is in the face on the user's screen
+   * @param {Object} size {x, y} x and y position on screen
+   * @returns true if in bounds, false if not in the face
+   */
   isInBounds({x, y}) {
     const screenPos = this.state.screenPos;
     const screenSize = this.state.screenSize;
@@ -83,19 +100,34 @@ export default class FaceCenterer extends React.Component {
     );
   }
 
+  /**
+   * Convert actual pixel size to screen displayed size
+   * @param {Object} size {x, y} actual pixel size
+   * @returns {x, y} scaled width and height
+   */
   sizeActualToScreen({x, y}) {
     const scalar = this.getSizeActualToScreenScalar();
     return { x: x * scalar, y: y * scalar };
   }
 
+  /**
+   * Convert screen displayed size to actual pixel size
+   * @param {Object} size {x, y} screen displayed size
+   * @returns {x, y} scaled width and height
+   */
   sizeScreenToActual({x, y}) {
     let scalar = 1 / this.getSizeActualToScreenScalar();
     return { x: x * scalar, y: y * scalar };      
   }
 
-  // All this logic is needed because the image may have some white bars on the sides or top/bottom
-  // And apparently these bars are counted in the html element's position and size
-  // So the image's actual pixel aspect ratio may be different from the html element's aspect ratio
+  /**
+   * Calculate scalar to convert actual pixel size to screen displayed size
+   * 
+   * All this logic is needed because the image may have some white bars on the sides or top/bottom
+   * And apparently these bars are counted in the html element's position and size
+   * So the image's actual pixel aspect ratio may be different from the html element's aspect ratio
+   * @returns scalar
+   */
   getSizeActualToScreenScalar() {
     const screenSize = this.state.screenSize;
     const actualSize = this.props.size;
@@ -108,6 +140,9 @@ export default class FaceCenterer extends React.Component {
     }
   }
 
+  /**
+   * Get the size and position of the image on the user's screen
+   */
   getScreenSizePos = () => {
     const img = this.imgRef.current;
     const height = img.clientHeight;
@@ -121,6 +156,10 @@ export default class FaceCenterer extends React.Component {
     });
   };
 
+  /**
+   * Render face image and center marker
+   * @returns jsx for the face image with center marker
+   */
   renderFace() {
     const face = (
       <img
@@ -135,11 +174,17 @@ export default class FaceCenterer extends React.Component {
     );
 
     let centerMarker = '';
+    // Only render center marker when the face is loaded on the screen and we know its position and size
     if (this.state.screenSize != null && this.state.screenPos != null) {
+      // Calculate center marker position
       const screenCenter = this.state.screenCenter;
       let diff = this.subtractVectors(this.props.pos, this.getCenter(this.props.size));
       diff = this.sizeActualToScreen(diff);
       const center = this.addVectors(screenCenter, diff)
+
+      // Render center marker
+      // Use paper for the shadow
+      // Use AddIcon for the marker/crosshair
       centerMarker = (
         <>
           <Paper
@@ -178,12 +223,18 @@ export default class FaceCenterer extends React.Component {
     );
   }
 
+  /**
+   * Render FaceCenterer component
+   * @returns jsx for the FaceCenterer component
+   */
   render() {
     if (!this.props.src)
       return '';
     
+    // Face and center marker
     const face = this.renderFace();
 
+    // Input boxes
     const screenSize = this.state.screenSize;
     const positionInput = (
       <PositionInput
@@ -200,6 +251,8 @@ export default class FaceCenterer extends React.Component {
         disabled={this.props.disabled}
       />
     );
+
+    // Change face button
     const changeFace = (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <UploadButton type='face' text='Change Face' onUpload={this.props.onFaceUpload} onPickSample={this.props.onPickSample} disabled={this.props.disabled} />

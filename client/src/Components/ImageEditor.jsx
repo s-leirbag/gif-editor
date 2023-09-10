@@ -15,6 +15,7 @@ import Typography from '@mui/material/Typography';
 
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
+// Text for the info popup
 const infoModalText =  {
   title: 'Frame Editor',
   body: (
@@ -30,14 +31,23 @@ const infoModalText =  {
   button: 'Got it!',
 }
 
+/**
+ * ImageEditor
+ * aka Frame Editor
+ * Display frame
+ * Change face position/rotation/scale/layer
+ */
 export default class ImageEditor extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
+      // image size and position on user's screen
       screenSize: null,
       screenPos: null,
+      // mouse position when dragging started
       dragStart: null,
     };
+    // Ref to image for getting size and position on screen
     this.imgRef = React.createRef();
   }
 
@@ -53,19 +63,31 @@ export default class ImageEditor extends React.Component {
     window.removeEventListener('resize', this.getScreenSizePos);
   }
 
+  /**
+   * Begin mouse drag
+   * @param {Object} e event object
+   */
   handleMouseDown = (e) => {
     if (this.props.disabled) return;
+
+    // Set drag start if mouse down in bounds
     const coord = { x: e.clientX, y: e.clientY };
     if (this.isInBounds(coord))
       this.setState({ dragStart: coord });
   }
 
+  /**
+   * Drag face in frame on mouseup
+   * @param {Object} e event object
+   */
   handleMouseUp = (e) => {
+    // Stop if disabled, drag began off screen, or faceScaleSize not set yet
     if (this.props.disabled || this.state.dragStart == null || this.props.faceScaleSize == null)
       return;
+
     const coord = { x: e.clientX, y: e.clientY };
     if (this.isInBounds(coord)) {
-      // Get new position
+      // Calculate new face position
       const dragStart = this.state.dragStart;
       let diff = { x: coord.x - dragStart.x, y: coord.y - dragStart.y };
       diff = this.sizeScreenToActual(diff);
@@ -86,6 +108,11 @@ export default class ImageEditor extends React.Component {
     this.setState({ dragStart: null });
   }
 
+  /**
+   * Check if the [mouse] position is in the image on the user's screen
+   * @param {Object} size {x, y} x and y position on screen
+   * @returns true if in bounds, false if not in the face
+   */
   isInBounds({x, y}) {
     const screenPos = this.state.screenPos;
     const screenSize = this.state.screenSize;
@@ -96,20 +123,35 @@ export default class ImageEditor extends React.Component {
       y >= screenPos.y && y <= screenPos.y + screenSize.height
     );
   }
-
+  
+  /**
+   * Convert actual pixel size to screen displayed size
+   * @param {Object} size {x, y} actual pixel size
+   * @returns {x, y} scaled width and height
+   */
   sizeActualToScreen({x, y}) {
     const scalar = this.getSizeActualToScreenScalar();
     return { x: x * scalar, y: y * scalar };
   }
 
+  /**
+   * Convert screen displayed size to actual pixel size
+   * @param {Object} size {x, y} screen displayed size
+   * @returns {x, y} scaled width and height
+   */
   sizeScreenToActual({x, y}) {
     let scalar = 1 / this.getSizeActualToScreenScalar();
     return { x: x * scalar, y: y * scalar };      
   }
 
-  // All this logic is needed because the image may have some white bars on the sides or top/bottom
-  // And apparently these bars are counted in the html element's position and size
-  // So the image's actual pixel aspect ratio may be different from the html element's aspect ratio
+  /**
+   * Calculate scalar to convert actual pixel size to screen displayed size
+   * 
+   * All this logic is needed because the image may have some white bars on the sides or top/bottom
+   * And apparently these bars are counted in the html element's position and size
+   * So the image's actual pixel aspect ratio may be different from the html element's aspect ratio
+   * @returns scalar
+   */
   getSizeActualToScreenScalar() {
     const screenSize = this.state.screenSize;
     const actualSize = this.props.size;
@@ -122,6 +164,9 @@ export default class ImageEditor extends React.Component {
     }
   }
   
+  /**
+   * Get the size and position of the image on the user's screen
+   */
   getScreenSizePos = () => {
     const img = this.imgRef.current;
     const height = img.clientHeight;
@@ -134,6 +179,10 @@ export default class ImageEditor extends React.Component {
     });
   };
 
+  /**
+   * Render the edited image
+   * @returns jsx for the image
+   */
   renderImage() {
     const image = [
       <img
@@ -150,6 +199,7 @@ export default class ImageEditor extends React.Component {
     const screenSize = this.state.screenSize;
     const screenPos = this.state.screenPos;
     if (screenSize != null && screenPos != null && this.props.isOverlayOn && this.props.overlay) {
+      // Render overlay
       image.push(
         <img
           src={this.props.overlay}
@@ -160,7 +210,7 @@ export default class ImageEditor extends React.Component {
             width: screenSize.width, height: screenSize.height, objectFit: 'contain',
             position: 'absolute', top: screenPos.y, left: screenPos.x,
             opacity: 0.3,
-            // opacity: 1,c
+            // opacity: 1,
           }}
         />
       );
@@ -176,6 +226,10 @@ export default class ImageEditor extends React.Component {
     );
   }
 
+  /**
+   * Render the image editor
+   * @returns jsx for the image editor
+   */
   render() {
     if (!this.props.src)
       return '';
@@ -183,8 +237,13 @@ export default class ImageEditor extends React.Component {
     const image = this.renderImage();
 
     const faceLayer = this.props.faceLayer;
+
+    // Disable editing if disabled (e.g. when playing gif)
     const disabled = this.props.disabled;
+
+    // Don't allow editing face transformations if the face is hidden
     const transformButtonsDisabled = disabled || faceLayer === 'hide';
+
     const screenSize = this.state.screenSize;
     const positionInput = (
       <PositionInput
@@ -243,8 +302,10 @@ export default class ImageEditor extends React.Component {
       </Stack>
     );
 
+    // Overlay UI section
     let overlayButton = '';
     if (this.props.overlay) {
+      // Overlay toggle
       overlayButton = (
         <Switch
           checked={this.props.overlay && this.props.isOverlayOn}
@@ -255,6 +316,7 @@ export default class ImageEditor extends React.Component {
       );
     }
     else {
+      // Button to upload overlay if not already uploaded
       overlayButton = <UploadButton type='overlay' text='Set Overlay' onUpload={this.props.onOverlaysUpload} disabled={disabled} />;
     }
     const overlayUI = (
@@ -264,6 +326,7 @@ export default class ImageEditor extends React.Component {
       </Stack>
     )
 
+    // Change gif button
     const changeGif = (
       <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
         <UploadButton type='gif' text='Change Gif' onUpload={this.props.onImagesUpload} onPickSample={this.props.onPickSample} disabled={disabled} />
