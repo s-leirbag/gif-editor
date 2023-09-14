@@ -11,6 +11,7 @@ I wanted to make it easier to make silly gifs with my friend's face!
 - Export/import/save properties and gifs
 - Crowdsourcing database
 - Feature to flip face left/right
+- Change name to "Gif Creator", add animated superlatives to title
 - ...
 
 ## Milestones
