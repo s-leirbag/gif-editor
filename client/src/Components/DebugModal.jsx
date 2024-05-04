@@ -29,17 +29,17 @@ export default function DebugModal(props) {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape')
+        handleOpen();
+    };
+
     React.useEffect(() => {
       window.addEventListener("keydown", handleKeyDown);
       return () => {
         window.removeEventListener("keydown", handleKeyDown);
       };
     }, []);
-
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape')
-        handleOpen();
-    };
 
     return (
       <Modal
