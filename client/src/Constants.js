@@ -1,6 +1,6 @@
 export const sampleFaces = [ 'doge', 'lego_head', 'mad_laugh', 'meme_man', 'smirk', 'steve', 'zucc' ];
 export const sampleGifs = [ 'dream', 'nyan_cat', 'roblox', 'doomed', 'exclamation', 'good', 'sigh' ];
-export const sampleGifsHighRes = [ 'high_res/exclamation' ];
+export const sampleGifsHighRes = [ 'high_res/exclamation', 'high_res/good' ];
 export const sampleGifCounts = {
   'dream': 16,
   'doomed': 18,
@@ -10,4 +10,5 @@ export const sampleGifCounts = {
   'roblox': 26,
   'sigh': 11,
   'high_res/exclamation': 20,
+  'high_res/good': 28,
 };
