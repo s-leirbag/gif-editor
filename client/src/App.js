@@ -262,6 +262,11 @@ export default class App extends React.Component {
   handlePickSampleGif = async (name) => {
     this.setIsLoading(true);
     const path = 'sample_gifs/' + name;
+    console.log(path,
+      path + '/images/' + 0 + '.png',
+      path + '/overlays/' + 0 + '.png',
+      path + '/properties.json'
+    );
 
     // load images and overlays from the sample gif
     const imgs = [];

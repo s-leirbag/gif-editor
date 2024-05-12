@@ -1,7 +1,7 @@
 import React from 'react';
 
 import InfoModal from './InfoModal';
-import { sampleGifs, sampleFaces } from '../Constants.js';
+import { sampleFaces, sampleGifs, sampleGifsHighRes } from '../Constants.js';
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
@@ -9,6 +9,8 @@ import Grid from '@mui/material/Grid';
 import IconButton from '@mui/material/IconButton';
 import Modal from '@mui/material/Modal';
 import Stack from '@mui/material/Stack'
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 
 import UploadFileIcon from "@mui/icons-material/UploadFile";
@@ -31,6 +33,7 @@ const style = {
  */
 export default function UploadButton(props) {
   const [open, setOpen] = React.useState(false);
+  const [res, setRes] = React.useState('Low Res');
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
 
@@ -206,11 +209,21 @@ export default function UploadButton(props) {
     }
 
     // Gallery of sample faces/gifs
-    const samples = (props.type === 'gif' ? sampleGifs : sampleFaces).map((name, index) => renderSample(name));
+    let samples;
+    if (props.type === 'gif' && res === 'High Res') {
+      samples = sampleGifsHighRes;
+    }
+    else if (props.type === 'gif' && res === 'Low Res') {
+      samples = sampleGifs;
+    }
+    else {
+      samples = sampleFaces;
+    }
+    samples = samples.map((name, index) => renderSample(name));
 
     // Render upload button and gallery
     body = (
-      <Grid container spacing={2} sx={{ mt: -1, height: '100%', overflow: 'auto' }}>
+      <Grid container spacing={2} sx={{ mt: -1, overflow: 'auto', height: samples.length > 3 ? '100%' : '50%' }}>
         <Grid item xs={3} key={'upload'}>
           {uploadButton}
         </Grid>
@@ -235,8 +248,32 @@ export default function UploadButton(props) {
       >
         <Box sx={{ ...style, ...size }}>
           <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1 }}>
-            <Typography variant="h4" component="h2">{props.text}</Typography>
-            {instructions}
+            <Stack direction="row" alignItems="end">
+              <Box>
+                <Typography variant="h4" component="h2">{props.text}</Typography>
+                {instructions}
+              </Box>
+
+              {
+                props.type === 'gif' ? (
+                  <Stack alignItems="end" sx={{ ml: 'auto' }}>
+                    <Typography variant='h6' component='h6'>Samples Resolution</Typography>
+                    <ToggleButtonGroup
+                      value={res}
+                      exclusive
+                      onChange={(e, v) => setRes(v)}
+                      aria-label='samples resolution'
+                    >
+                      {['High Res', 'Low Res'].map((value) => (
+                        <ToggleButton value={value} aria-label={value} key={value} sx={{ pt: 0.5, pb: 0.5 }}>
+                          {value}
+                        </ToggleButton>
+                      ))}
+                    </ToggleButtonGroup>
+                  </Stack>
+                ) : ''
+              }
+            </Stack>
             {body}
           </Box>
         </Box>
