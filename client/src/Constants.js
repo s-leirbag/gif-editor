@@ -9,4 +9,5 @@ export const sampleGifCounts = {
   'nyan_cat': 9,
   'roblox': 26,
   'sigh': 11,
+  'high_res/exclamation': 20,
 };
