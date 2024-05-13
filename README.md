@@ -4,26 +4,26 @@
 
 I wanted to make it easier to make silly gifs with my friend's face!
 
+## Milestones
+
+### Prototype Done
+Finished basic functionality with server-side image processing.
+
+![Prototype Done!](readme_media/prototype_done_slide.gif)
+
+### Final Draft
+UI overhaul + more functionality. Added tutorials and instructions to help you!
+
+![Final Draft!](readme_media/final_draft_slide.gif)
+
 ## To-do
 
-- High res options
 - More gifs & faces
 - Export/import/save properties and gifs
 - Crowdsourcing database
 - Feature to flip face left/right
 - Change name to "Gif Creator", add animated superlatives to title
 - ...
-
-## Milestones
-
-### Prototype Done
-Finished basic functionality with image processing on backend and editor UI on frontend.
-
-### Final Draft
-Overhauled UI and added lots more functionality. Learned a lot about using HTTP requests. Made tutorials and instructions so friends can use it!
-
-![Prototype Done!](readme_media/prototype_done_slide.gif)
-![Final Draft!](readme_media/final_draft_slide.gif)
 
 ## Credits
 
