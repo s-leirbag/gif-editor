@@ -2,7 +2,10 @@ var express = require('express');
 var router = express.Router();
 const multer  = require('multer')
 const storage = multer.memoryStorage()
-const upload = multer({ storage: storage })
+const upload = multer({
+  storage: storage,
+  limits: { fieldSize: 2 * 1024 * 1024 },
+});
 const GifEncoder = require('gif-encoder');
 const sharp = require('sharp');
 const fs = require('fs');
